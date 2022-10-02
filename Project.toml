@@ -2,3 +2,6 @@ name = "materialNonLinearity"
 uuid = "9cecd449-3b3e-4134-b924-03be01838ca5"
 authors = ["joaquinv <joaquinv@fing.edu.uy>"]
 version = "0.1.0"
+
+[deps]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
