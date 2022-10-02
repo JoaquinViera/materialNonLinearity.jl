@@ -1,0 +1,4 @@
+name = "materialNonLinearity"
+uuid = "9cecd449-3b3e-4134-b924-03be01838ca5"
+authors = ["joaquinv <joaquinv@fing.edu.uy>"]
+version = "0.1.0"
