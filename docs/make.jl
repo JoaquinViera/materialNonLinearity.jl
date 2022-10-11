@@ -2,4 +2,7 @@ using Documenter, materialNonLinearity
 
 makedocs(modules=[materialNonLinearity], sitename="materialNonLinearity.jl")
 
-deploydocs(repo="github.com/JoaquinViera/materialNonLinearity.jl.git")
+deploydocs(
+  repo="github.com/JoaquinViera/materialNonLinearity.jl.git",
+  push_preview = true
+  )
