@@ -12,3 +12,5 @@
 [dev-url]: https://JoaquinViera.github.io/materialNonLinearity.jl/
 [ci-img]: https://github.com/JoaquinViera/materialNonLinearity.jl/actions/workflows/CI.yml/badge.svg?branch=main
 [ci-url]: https://github.com/JoaquinViera/materialNonLinearity.jl/actions/workflows/CI.yml
+[lic-img]: https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000
+[lic-url]: https://github.com/JoaquinViera/materialNonLinearity.jl/blob/main/LICENSE
