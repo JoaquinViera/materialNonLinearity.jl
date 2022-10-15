@@ -3,7 +3,7 @@
 # ===============================================
 
 # Load solver module
-using ProyectoCCJ, Plots
+using materialNonLinearity, Plots
 
 # example name
 problemName = "CantileverEPP"
