@@ -13,8 +13,8 @@ function finte_KT_int(material, l, secParams, Uke, intBool)
     h = secParams[2]
 
     # Gauss points
-    ne = 30
-    ns = 30
+    ne = 12
+    ns = 12
     xge, we = gausslegendre(ne)
     xgs, ws = gausslegendre(ns)
 

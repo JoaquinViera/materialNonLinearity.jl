@@ -36,6 +36,8 @@ include("elemGeom.jl")
 
 # Main function
 include("solver.jl")
+include("assembler.jl")
+include("convergenceCheck.jl")
 
 # Numerical methods
 include("NR.jl")

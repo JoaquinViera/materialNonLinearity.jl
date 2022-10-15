@@ -99,7 +99,6 @@ struct analysisSettings
     tolk::Float64
     tolu::Float64
     tolf::Float64
-    loadSteps::Int64
     loadFactors::Vector{Float64}
 end
 

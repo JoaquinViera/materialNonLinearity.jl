@@ -1,34 +1,33 @@
 function AL(section, material, mesh, Uk, modelSol, time, analysisSettings, dispIter)
 
-    #=
-        deltas = KT \ residual
-        δu_ast = deltas[1]
-        δu_bar = deltas[2]
+    deltas = KT \ residual
+    δu_ast = deltas[1]
+    δu_bar = deltas[2]
 
-        if length(analysisSettings.incremArcLen) > 1
-            Δl = (analysisSettings.incremArcLen)(time)
+    if length(analysisSettings.incremArcLen) > 1
+        Δl = (analysisSettings.incremArcLen)(time)
+    else
+        Δl = analysisSettings.incremArcLen
+    end
+
+    if dispIter == 1 # Predictor
+        if norm(Uk) == 0
+            δλ = analysisSettings.initialDeltaLAmbda
         else
-            Δl = analysisSettings.incremArcLen
+            δλ = sign((convUk' * (arcLengthNorm .* δu_bar))) * Δl / sqrt(δu_bar' * (arcLengthNorm .* δu_bar))
         end
-
-
-        if dispIter == 1 # Predictor
-            # todo...
-        end
-
-        # Jirasek method
+    else # Jirasek method
         controlDofs = analysisSettings.controlDofs # ajustar esto luego
-        projection = analysisSettings.sign
+        scalingProjection = analysisSettings.sign
         c = zeros(size(Uk), 1)
-        c[controlDofs] = projection
-        δλ = (Δl - c'* )
+        c[controlDofs] = scalingProjection
+        δλ = (Δl - c' * currδu - c' * δu_ast) / (c' * δu_bar)
+    end
 
-        Uk = 0
-        Fintk = 0
-        FintkL = 0
-        cond = 0
-        convParam = 0
+    δUk = δu_ast + δλ * δu_bar
 
-        return Uk, Fintk, FintkL, cond, convParam
-    =#
+    Uk[freeDofs] = Uk[freeDofs] + δUk
+
+    return Uk, Fintk, FintkL, cond, convParam
+
 end

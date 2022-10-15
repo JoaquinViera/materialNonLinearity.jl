@@ -35,7 +35,7 @@ strSections = section(secName, secParams)
 
 # Nodes
 L = 1
-nnodes = 101
+nnodes = 21
 xcoords = collect(LinRange(0, L, nnodes))
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
@@ -79,7 +79,7 @@ nLoadSteps = 80 # Number of load increments
 loadFactorsVec = ones(nLoadSteps) # Load scaling factors
 
 # Numerical method settings struct
-strAnalysisSets = analysisSettings(tolk, tolu, tolf, nLoadSteps, loadFactorsVec)
+strAnalysisSets = analysisSettings(tolk, tolu, tolf, loadFactorsVec)
 
 # Plot parameters
 # =======================================
