@@ -1,6 +1,12 @@
 # materialNonLinearity.jl
 
-## Package
+## Introduction
+
+FEM code to analyze 2D Euler Bernoulli beams with non linear and non linear constitutive laws such as
+
+* Linear elastic
+* Elastic perfectly plastic
+* Isotropic linear hardening
 
 | **Documentation** |**Status**| **License** |
 |:-----------------:|:---------------:|:------------:|
