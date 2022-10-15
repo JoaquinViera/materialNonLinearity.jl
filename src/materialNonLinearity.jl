@@ -41,6 +41,7 @@ include("convergenceCheck.jl")
 
 # Numerical methods
 include("NR.jl")
+include("AL.jl")
 
 # Core functions
 include("finte_KT_int.jl")

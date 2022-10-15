@@ -1,12 +1,12 @@
 # Check convergence
 
-function convergenceCheck(freeDofs, Uk, deltaUk, Fextk, Fintk, analysisSettings, dispIter)
+function convergenceCheck(freeDofs, Uk, δUk, Fextk, Fintk, analysisSettings, dispIter)
 
     Fext_red = Fextk[freeDofs]
 
     # Disps stop
     normUk = norm(Uk[freeDofs])
-    normDeltaUk = norm(deltaUk)
+    normDeltaUk = norm(δUk)
 
     # Forces stop
     norm_r = norm(Fintk[freeDofs] - Fext_red)
