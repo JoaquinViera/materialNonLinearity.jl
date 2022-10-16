@@ -17,4 +17,4 @@ FEM code to analyze 2D Euler Bernoulli beams with linear and non-linear constitu
 [ci-img]: https://github.com/JoaquinViera/materialNonLinearity.jl/actions/workflows/ci.yml/badge.svg?branch=main
 [ci-url]: https://github.com/JoaquinViera/materialNonLinearity.jl/actions/workflows/ci.yml
 [lic-img]: https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000
-[lic-url]: https://github.com/JoaquinViera/materialNonLinearity.jl/blob/main/LICENSE
+[lic-url]: https://github.com/JoaquinViera/materialNonLinearity.jl/blob/main/LICENSE.md
