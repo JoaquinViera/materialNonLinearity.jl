@@ -2,7 +2,7 @@
 
 ## Introduction
 
-FEM code to analyze 2D Euler Bernoulli beams with non linear and non linear constitutive laws such as
+FEM code to analyze 2D Euler Bernoulli beams with linear and non-linear constitutive laws such as
 
 * Linear elastic
 * Elastic perfectly plastic
