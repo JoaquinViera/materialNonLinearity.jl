@@ -17,8 +17,10 @@ function constitutiveModel(material, epsk)
             epsY = sigmaY / E
             dsigdeps = E * K / (E + K)
             sigma = sigmaY * sign(epsk) + dsigdeps * (epsk - epsY * sign(epsk))
-            if dsigdeps < 0
-                error("Softening not available yet")
+            if dsigdeps < 0 && sign(sigma) != sign(sigmaY * sign(epsk))
+                #error("Softening not available yet")
+                sigma = 0
+                dsigdeps = 0
             end
         else
             dsigdeps = E

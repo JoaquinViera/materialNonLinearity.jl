@@ -3,15 +3,15 @@
 # ============================================================================
 # Material 
 # ============================================================================
-struct materialModel{Real}
+struct MaterialModel{Real}
     name::String
     params::Vector{Real}
     E::Real
     σY0::Real
     K::Real
 end
-
-function materialModel(name, params::Vector)
+# Constructor
+function MaterialModel(name, params::Vector)
     if cmp(name, "linearElastic") == 1 && cmp(name, "isotropicBiLinear") == 1
         error("Current models are linearElastic & isotropicBiLinear.")
     else
@@ -26,7 +26,7 @@ function materialModel(name, params::Vector)
             σY0 = params[2]
             length(params) == 2 ? K = 0.0 : K = params[3]
         end
-        return materialModel(name, params, E, σY0, K)
+        return MaterialModel(name, params, E, σY0, K)
     end
 end
 
@@ -35,22 +35,22 @@ matName = "linearElastic"
 matName2 = "isotropicBiLinear"
 matParams = [10.0]
 matParams2 = [10.0, 1.0, 7]
-mat1 = materialModel(matName, matParams)
-mat2 = materialModel(matName2, matParams2)
+mat1 = MaterialModel(matName, matParams)
+mat2 = MaterialModel(matName2, matParams2)
 =#
 
 # ============================================================================
 # Section
 # ============================================================================
 
-struct section{Real}
+struct Section{Real}
     name::String
     params::Vector{Real}
     A::Float64
     Iy::Float64
 end
 
-function section(name, params)
+function Section(name, params)
     if cmp(name, "rectangle") == 0
         length(params) != 2 ? error("Declare only width and height.") : nothing
         A = params[1] * params[2]
@@ -58,20 +58,20 @@ function section(name, params)
     else
         error("To be implemented.")
     end
-    return section(name, params, A, Iy)
+    return Section(name, params, A, Iy)
 end
 
 #=
 secName = "rectangle"
 secParams = [0.1, 0.6]
-secStr = section(secName, secParams)
+secStr = Section(secName, secParams)
 =#
 
 # ============================================================================
 # Mesh
 # ============================================================================
 
-struct mesh
+struct Mesh
     nodesMat::Matrix{Float64}
     conecMat::Matrix
 end
@@ -86,7 +86,7 @@ meshNodes = Nodes(a, b)
 # Boundary conditions
 # ============================================================================
 
-struct boundaryConds
+struct BoundaryConds
     suppMatrix::Matrix
     nodalForceMatrix::Matrix
 end
@@ -95,7 +95,7 @@ end
 # Analysis settings
 # ============================================================================
 
-struct analysisSettings
+struct AnalysisSettings
     tolk::Float64
     tolu::Float64
     tolf::Float64
@@ -107,7 +107,7 @@ end
 # Plots settings
 # ============================================================================
 
-struct plotSettings
+struct PlotSettings
     lw::Int64
     ms::Int64
     color::String
@@ -118,7 +118,7 @@ end
 # Store Solution
 # ============================================================================
 
-mutable struct modelSol
+mutable struct ModelSol
     Uk::Vector{Float64}
     convδu::Array{Float64}
     Fextk::Vector{Float64}
@@ -134,7 +134,7 @@ end
 # Iter parameters
 # ============================================================================
 
-mutable struct iterParams
+mutable struct IterParams
     nTimes::Int64
     stopCrit::Array{Int64}
 end

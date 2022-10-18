@@ -27,8 +27,6 @@ function solver(strSections, strMaterialModels, strMesh, strBC, strAnalysisSets)
                 λk = 0
             else
                 λk = modelSol.loadFactors[time]
-                println("lambda")
-                #println(λk)
             end
         end
 
@@ -53,18 +51,20 @@ function solver(strSections, strMaterialModels, strMesh, strBC, strAnalysisSets)
             else
                 Uk, δUk, λk = AL(Uk, modelSol, KTk, Fintk, time, analysisSettings, dispIter, varFext, currδu, convδu)
                 currδu = δUk + currδu
-                println(λk)
             end
 
             # Computes Fintk at computed Uk
-            intBool = 0
-            Fintk = assembler(strSections, strMaterialModels, strMesh, Uk, modelSol, time, strAnalysisSets, dispIter, intBool)
+            intBool = 1
+            Fintk, KTk = assembler(strSections, strMaterialModels, strMesh, Uk, modelSol, time, strAnalysisSets, dispIter, intBool)
 
             # Check convergence
-            cond, convIter = convergenceCheck(modelSol.freeDofs, Uk, δUk, modelSol.Fextk, Fintk, strAnalysisSets, dispIter)
+            cond, convIter = convergenceCheck(modelSol.freeDofs, Uk, δUk, modelSol.Fextk, Fintk, strAnalysisSets, dispIter, time)
 
             # Stores results if convergence
             if convIter == 1
+                #println("cond $cond")
+                #neigs = sum(eigvals(KTk) .< 0)
+                #println("number of negative eigs $neigs")
                 modelSol.loadFactors = hcat(modelSol.loadFactors, λk)
                 modelSol.convδu = hcat(modelSol.convδu, δUk)
                 modelSol.matUk = hcat(modelSol.matUk, Uk)
@@ -79,5 +79,5 @@ function solver(strSections, strMaterialModels, strMesh, strBC, strAnalysisSets)
         time += 1
     end
 
-    return modelSol, time
+    return modelSol, time, iterData
 end

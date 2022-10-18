@@ -13,12 +13,12 @@ problemName = "CantileverEPP"
 # =======================================
 E = 210e6
 σY = 250e3
-K = E / 20
+K = -E / 500
 matName = "isotropicBiLinear"
 matParams = [E, σY, K]
 
 # Materials struct
-strMaterialModels = materialModel(matName, matParams)
+strMaterialModels = MaterialModel(matName, matParams)
 
 # Define section
 # =======================================
@@ -28,14 +28,14 @@ secName = "rectangle"
 secParams = [b, h]
 
 # Section struct
-strSections = section(secName, secParams)
+strSections = Section(secName, secParams)
 
 # Define Mesh
 # =======================================
 
 # Nodes
 L = 1
-nnodes = 21
+nnodes = 101
 xcoords = collect(LinRange(0, L, nnodes))
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
@@ -52,7 +52,7 @@ secVec = ones(nelems)
 Conec = hcat(matVec, secVec, elemConec)
 
 # Mesh struct
-strMesh = mesh(Nodes, Conec)
+strMesh = Mesh(Nodes, Conec)
 
 # Boundary conditions
 # =======================================
@@ -67,7 +67,7 @@ nod = nnodes
 nodalForces = [nod Fy Mz]
 
 # BoundaryConds struct
-strBC = boundaryConds(supps, nodalForces)
+strBC = BoundaryConds(supps, nodalForces)
 
 # Numerical method parameters
 # =======================================
@@ -75,11 +75,11 @@ strBC = boundaryConds(supps, nodalForces)
 tolk = 50 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-nLoadSteps = 80 # Number of load increments
+nLoadSteps = 100 # Number of load increments
 loadFactorsVec = ones(nLoadSteps) # Load scaling factors
 
 # Numerical method settings struct
-strAnalysisSets = analysisSettings(tolk, tolu, tolf, loadFactorsVec)
+strAnalysisSets = AnalysisSettings(tolk, tolu, tolf, loadFactorsVec)
 
 # Plot parameters
 # =======================================
@@ -87,13 +87,13 @@ lw = 3
 ms = 2
 color = "black"
 
-strPlots = plotSettings(lw, ms, color)
+strPlots = PlotSettings(lw, ms, color)
 
 # ===============================================
 # Process model parameters
 # ===============================================
 
-sol, time = solver(strSections, strMaterialModels, strMesh, strBC, strAnalysisSets)
+sol, time, iterData = Solver(strSections, strMaterialModels, strMesh, strBC, strAnalysisSets)
 
 
 
@@ -155,7 +155,8 @@ end
 fig = plot(kappaHistElem[elem, :], Mana, markershape=:circle, lw=lw, ms=ms)
 plot!(fig, kappaHistElem[elem, :], mVec, markershape=:rect, lw=lw, ms=ms)
 
-
+err = (mVec - Mana) ./ Mana * 100
+maxErr = max(err)
 
 # Check KTe
 Uke = zeros(4)

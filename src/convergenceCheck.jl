@@ -1,6 +1,6 @@
 # Check convergence
 
-function convergenceCheck(freeDofs, Uk, δUk, Fextk, Fintk, analysisSettings, dispIter)
+function convergenceCheck(freeDofs, Uk, δUk, Fextk, Fintk, analysisSettings, dispIter, time)
 
     Fext_red = Fextk[freeDofs]
 
@@ -14,7 +14,8 @@ function convergenceCheck(freeDofs, Uk, δUk, Fextk, Fintk, analysisSettings, di
 
     if dispIter >= analysisSettings.tolk
         cond = 1 # iters
-        convIter = 1
+        convIter = 0
+        error("Non convergence at step $time")
     elseif (normDeltaUk < analysisSettings.tolu * normUk) || (norm_r < analysisSettings.tolf * normFext)
         if normDeltaUk < analysisSettings.tolu * normUk
             cond = 2 # disps

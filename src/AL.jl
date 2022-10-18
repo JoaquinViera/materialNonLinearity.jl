@@ -16,7 +16,7 @@ function AL(Uk, modelSol, KTk, Fintk, time, analysisSettings, dispIter, varFext,
     δu_ast = deltas[:, 1]
     δu_bar = deltas[:, 2]
 
-    incremArcLen = 1e-3
+    incremArcLen = 1e-4
     initialDeltaLambda = 1e-2
     arcLengthNorm = zeros(length(freeDofs))
     arcLengthNorm[1:2:end] .= 1
@@ -38,7 +38,8 @@ function AL(Uk, modelSol, KTk, Fintk, time, analysisSettings, dispIter, varFext,
             δλ = sign((convδu' * (arcLengthNorm .* δu_bar))) * Δl / sqrt(δu_bar' * (arcLengthNorm .* δu_bar))
         end
     else # Jirasek method
-        controlDofs = freeDofs[end-1]
+        #controlDofs = freeDofs[end-1]
+        controlDofs = 10
         scalingProjection = -1
         # controlDofs = analysisSettings.controlDofs # ajustar esto luego
         #scalingProjection = analysisSettings.sign
