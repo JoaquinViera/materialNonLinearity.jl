@@ -2,7 +2,7 @@
 
 # functions
 
-export ini_defs, nodes2dofs, solver
+export initial_defs, nodes2dofs, solver
 
 # structs
 

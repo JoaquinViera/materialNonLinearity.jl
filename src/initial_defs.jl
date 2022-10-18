@@ -2,7 +2,7 @@
 # Definition of initial variables to run
 #
 
-function ini_defs(mesh, boundaryConds, analysisSettings)
+function initial_defs(mesh, boundaryConds, analysisSettings)
 
     ndofs = 2 # degrees of freedom per node
     nnodes = size(mesh.nodesMat, 1)
@@ -50,10 +50,10 @@ function ini_defs(mesh, boundaryConds, analysisSettings)
     δUk = zeros(length(free_dofs))
 
     # store struct
-    modelStore = modelSol(Uk, δUk, Fextk, Fintk, matUk, matFext, matFint, free_dofs, [0.0])
-    iterData = iterParams(nTimes, stopCrit)
+    modelStore = ModelSol(Uk, δUk, Fextk, Fintk, matUk, matFext, matFint, free_dofs, [0.0])
+    IterData = IterParams(nTimes, stopCrit)
 
-    return modelStore, iterData, varFext
+    return modelStore, IterData, varFext
 end
 
 

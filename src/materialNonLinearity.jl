@@ -28,7 +28,7 @@ include("init.jl")
 # Solver initialization
 # -----------------------------------------------
 # Internal variables 
-include("ini_defs.jl")
+include("initial_defs.jl")
 
 # General Functions
 include("nodes2dofs.jl")

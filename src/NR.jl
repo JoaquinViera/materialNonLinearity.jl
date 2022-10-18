@@ -1,10 +1,10 @@
 # Newton-Raphson 
 # =====================================
 
-function NR(Uk, modelSol, KTk, Fintk)
+function NR(Uk, ModelSol, KTk, Fintk)
 
-    Fextk = modelSol.Fextk
-    freeDofs = modelSol.freeDofs
+    Fextk = ModelSol.Fextk
+    freeDofs = ModelSol.freeDofs
 
     # Solve system
     KTkred = KTk[freeDofs, freeDofs]

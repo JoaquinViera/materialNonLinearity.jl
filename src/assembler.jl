@@ -1,5 +1,5 @@
 
-function assembler(section, material, mesh, Uk, modelSol, time, analysisSettings, dispIter, intBool)
+function assembler(section, material, mesh, Uk, ModelSol, time, analysisSettings, dispIter, intBool)
 
     ndofs = 2 # degrees of freedom per node
     nnodes = size(mesh.nodesMat, 1)

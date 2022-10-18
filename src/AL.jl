@@ -1,9 +1,9 @@
-function AL(Uk, modelSol, KTk, Fintk, time, analysisSettings, dispIter, varFext, currδu, convδu)
+function AL(Uk, ModelSol, KTk, Fintk, time, analysisSettings, dispIter, varFext, currδu, convδu)
 
 
 
-    Fextk = modelSol.Fextk
-    freeDofs = modelSol.freeDofs
+    Fextk = ModelSol.Fextk
+    freeDofs = ModelSol.freeDofs
 
     Fext_red = Fextk[freeDofs]
     Fint_red = Fintk[freeDofs]
