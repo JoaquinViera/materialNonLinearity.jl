@@ -39,9 +39,9 @@ include("solver.jl")
 include("assembler.jl")
 include("convergence_check.jl")
 
-# Numerical methods
-include("NR.jl")
-include("AL.jl")
+# Numerical methods - Algorithms
+include("Algorithms/NR.jl")
+include("Algorithms/AL.jl")
 
 # Core functions
 include("finte_KT_int.jl")

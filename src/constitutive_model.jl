@@ -2,34 +2,34 @@
 # Computes stress and tangent modulus
 #
 
-function constitutive_model(material, epsk)
+function constitutive_model(MaterialModel, εₖ)
 
-    E = material.E
+    E = MaterialModel.E
 
-    if cmp(material.name, "linearElastic") == 0
+    if cmp(MaterialModel.name, "linearElastic") == 0
         dsigdeps = E
-        sigma = E * epsk
-    elseif cmp(material.name, "isotropicBiLinear") == 0
-        sigmaY = material.σY0
-        sigma_tr = abs(E * epsk)
-        if sigma_tr >= sigmaY
-            K = material.params[3]
-            epsY = sigmaY / E
+        σ = E * εₖ
+    elseif cmp(MaterialModel.name, "isotropicBiLinear") == 0
+        σY = MaterialModel.σY0
+        σ_tr = abs(E * εₖ)
+        if σ_tr >= σY
+            K = MaterialModel.params[3]
+            εY = σY / E
             dsigdeps = E * K / (E + K)
-            sigma = sigmaY * sign(epsk) + dsigdeps * (epsk - epsY * sign(epsk))
-            if dsigdeps < 0 && sign(sigma) != sign(sigmaY * sign(epsk))
+            σ = σY * sign(εₖ) + dsigdeps * (εₖ - εY * sign(εₖ))
+            if dsigdeps < 0 && sign(σ) != sign(σY * sign(εₖ))
                 #error("Softening not available yet")
-                sigma = 0
+                σ = 0
                 dsigdeps = 0
             end
         else
             dsigdeps = E
-            sigma = E * epsk
+            σ = E * εₖ
         end
     else
-        error("Material model to be implemented")
+        error("MaterialModel model to be implemented")
     end
 
-    return sigma, dsigdeps
+    return σ, dsigdeps
 end
 

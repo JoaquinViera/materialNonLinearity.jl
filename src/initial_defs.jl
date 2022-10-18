@@ -2,18 +2,18 @@
 # Definition of initial variables to run
 #
 
-function initial_defs(mesh, boundaryConds, analysisSettings)
+function initial_defs(Mesh, BoundaryConds, AnalysisSettings)
 
     ndofs = 2 # degrees of freedom per node
-    nnodes = size(mesh.nodesMat, 1)
+    nnodes = size(Mesh.nodesMat, 1)
 
     # varFext
     varFext = zeros(ndofs * nnodes)
     # Loaded nodes
-    loadedNodes = boundaryConds.nodalForceMatrix[:, 1]
+    loadedNodes = BoundaryConds.nodalForceMatrix[:, 1]
     for i in 1:length(loadedNodes)
         dofs = nodes2dofs(loadedNodes[i], ndofs)
-        varFext[dofs] = boundaryConds.nodalForceMatrix[i, 2:3]
+        varFext[dofs] = BoundaryConds.nodalForceMatrix[i, 2:3]
     end
 
     # Solution parameters
@@ -26,15 +26,15 @@ function initial_defs(mesh, boundaryConds, analysisSettings)
     matFint = vcat(Fintk, []) # Matrix to store interal forces 
 
     # Iteration parameters
-    nTimes = length(analysisSettings.loadFactors)
+    nTimes = length(AnalysisSettings.loadFactors)
     stopCrit = []
 
     # Supports
     fixed_dofs = []
-    suppNodes = boundaryConds.suppMatrix[:, 1]
+    suppNodes = BoundaryConds.suppMatrix[:, 1]
     for i in 1:length(suppNodes)
         for j in 1:ndofs
-            if boundaryConds.suppMatrix[i, j+1] == Inf
+            if BoundaryConds.suppMatrix[i, j+1] == Inf
                 fixed_dofs = [fixed_dofs; nodes2dofs(suppNodes[i], ndofs)[j]]
             end
         end
@@ -50,10 +50,10 @@ function initial_defs(mesh, boundaryConds, analysisSettings)
     δUk = zeros(length(free_dofs))
 
     # store struct
-    modelStore = ModelSol(Uk, δUk, Fextk, Fintk, matUk, matFext, matFint, free_dofs, [0.0])
+    ModelStore = ModelSol(Uk, δUk, Fextk, Fintk, matUk, matFext, matFint, free_dofs, [0.0])
     IterData = IterParams(nTimes, stopCrit)
 
-    return modelStore, IterData, varFext
+    return ModelStore, IterData, varFext
 end
 
 
