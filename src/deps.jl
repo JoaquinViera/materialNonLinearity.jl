@@ -1,3 +1,3 @@
 # Dependencies
 
-using Plots, LinearAlgebra, BenchmarkTools, FastGaussQuadrature
+using LinearAlgebra, FastGaussQuadrature

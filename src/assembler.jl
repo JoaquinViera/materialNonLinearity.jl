@@ -1,5 +1,5 @@
 
-function assembler(section, material, mesh, Uk, ModelSol, time, analysisSettings, dispIter, intBool)
+function assembler(section, material, mesh, Uk, intBool)
 
     ndofs = 2 # degrees of freedom per node
     nnodes = size(mesh.nodesMat, 1)
@@ -13,7 +13,7 @@ function assembler(section, material, mesh, Uk, ModelSol, time, analysisSettings
         # Elem nodes, dofs, material and geometry
         nodeselem = mesh.conecMat[i, 3]
         elemdofs = nodes2dofs(nodeselem[:], ndofs)
-        R, l = elemGeom(mesh.nodesMat[nodeselem[1], :], mesh.nodesMat[nodeselem[2], :], ndofs)
+        R, l = element_geometry(mesh.nodesMat[nodeselem[1], :], mesh.nodesMat[nodeselem[2], :], ndofs)
         elemSecParams = section.params
         elemMaterial = material
 

@@ -2,7 +2,7 @@
 # Computes rotation matrix and elem length
 #
 
-function elemGeom(cord1, cord2, ndofs)
+function element_geometry(cord1, cord2, ndofs)
 
     l = sqrt(sum((cord2 - cord1) .^ 2))
 

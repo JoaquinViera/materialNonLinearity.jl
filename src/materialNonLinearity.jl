@@ -25,19 +25,19 @@ include("deps.jl")
 # Structs definition
 include("init.jl")
 
-# Solver initialization
+# solver initialization
 # -----------------------------------------------
 # Internal variables 
 include("initial_defs.jl")
 
 # General Functions
 include("nodes2dofs.jl")
-include("elemGeom.jl")
+include("element_geometry.jl")
 
 # Main function
 include("solver.jl")
 include("assembler.jl")
-include("convergenceCheck.jl")
+include("convergence_check.jl")
 
 # Numerical methods
 include("NR.jl")
@@ -45,7 +45,7 @@ include("AL.jl")
 
 # Core functions
 include("finte_KT_int.jl")
-include("constitutiveModel.jl")
+include("constitutive_model.jl")
 
 
 # Export functions

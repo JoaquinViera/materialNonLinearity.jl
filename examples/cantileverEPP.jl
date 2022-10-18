@@ -18,7 +18,7 @@ matName = "isotropicBiLinear"
 matParams = [E, σY, K]
 
 # Materials struct
-MaterialModel = MaterialModel(matName, matParams)
+StrMaterialModels = MaterialModel(matName, matParams)
 
 # Define section
 # =======================================
@@ -28,7 +28,7 @@ secName = "rectangle"
 secParams = [b, h]
 
 # Section struct
-Section = Section(secName, secParams)
+StrSections = Section(secName, secParams)
 
 # Define Mesh
 # =======================================
@@ -52,7 +52,7 @@ secVec = ones(nelems)
 Conec = hcat(matVec, secVec, elemConec)
 
 # Mesh struct
-Mesh = Mesh(Nodes, Conec)
+StrMesh = Mesh(Nodes, Conec)
 
 # Boundary conditions
 # =======================================
@@ -67,7 +67,7 @@ nod = nnodes
 nodalForces = [nod Fy Mz]
 
 # BoundaryConds struct
-BoundaryConds = BoundaryConds(supps, nodalForces)
+StrBoundaryConds = BoundaryConds(supps, nodalForces)
 
 # Numerical method parameters
 # =======================================
@@ -79,7 +79,7 @@ nLoadSteps = 100 # Number of load increments
 loadFactorsVec = ones(nLoadSteps) # Load scaling factors
 
 # Numerical method settings struct
-AnalysisSettings = AnalysisSettings(tolk, tolu, tolf, loadFactorsVec)
+StrAnalysisSettings = AnalysisSettings(tolk, tolu, tolf, loadFactorsVec)
 
 # Plot parameters
 # =======================================
@@ -93,14 +93,14 @@ strPlots = PlotSettings(lw, ms, color)
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = Solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
+sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings)
 
 
 
 # Check First step
 # --------------------------------
 P = abs(Fy)
-Iy = Section.Iy
+Iy = StrSections.Iy
 # Analytical solution
 Man = P * L
 fan = P * L^3 / (3 * E * Iy)
@@ -128,9 +128,9 @@ thetaNum = matUk[dofT, 2]
 kappaHistElem = zeros(nelems, nLoadSteps)
 
 for j in 1:nelems
-    nodeselem = Mesh.conecMat[j, 3]
+    nodeselem = StrMesh.conecMat[j, 3]
     elemdofs = nodes2dofs(nodeselem[:], 2)
-    local R, l = elemGeom(Mesh.nodesMat[nodeselem[1], :], Mesh.nodesMat[nodeselem[2], :], 2)
+    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 2)
     UkeL = R' * matUk[elemdofs, 1:end]
     Be = internFunction(0, l)
     kappaelem = Be * UkeL
@@ -146,7 +146,7 @@ elem = 1
 for i in 1:nLoadSteps
     kappak = kappaHistElem[elem, i]
     if kappak <= kappae
-        Mana[i] = E * Section.Iy * kappak
+        Mana[i] = E * StrSections.Iy * kappak
     else
         Mana[i] = σY * b * h^2 / 12 * (3 - kappae^2 / kappak^2 + kappak / kappae * C / E * (2 - 3 * kappae / kappak + kappae^3 / kappak^3))
     end
@@ -155,14 +155,15 @@ end
 fig = plot(kappaHistElem[elem, :], Mana, markershape=:circle, lw=lw, ms=ms)
 plot!(fig, kappaHistElem[elem, :], mVec, markershape=:rect, lw=lw, ms=ms)
 
-err = (mVec - Mana) ./ Mana * 100
-maxErr = max(err)
+err = (mVec[2:end] - Mana[2:end]) ./ Mana[2:end] * 100
+maxErr = maximum(err)
 
 # Check KTe
 Uke = zeros(4)
 l = 1
-Iy = Section.Iy
-E = MaterialModel.E
+Iy = StrSections.Iy
+E = StrMaterialModels.E
 
-Finte, KTe = finte_KT_int(MaterialModel, l, Section.params, Uke, 1)
+Finte, KTe = finte_KT_int(StrMaterialModels, l, StrSections.params, Uke, 1)
 Kana = E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2]
+

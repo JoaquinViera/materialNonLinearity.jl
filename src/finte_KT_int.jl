@@ -38,7 +38,7 @@ function finte_KT_int(material, l, secParams, Uke, intBool)
             pgs = pgsVec[m]
             epsk = epskVec[m]
 
-            sigma, dsigdeps = constitutiveModel(material, epsk)
+            sigma, dsigdeps = constitutive_model(material, epsk)
 
             secFinte = h / 2 * (b * (-B') * pgs * sigma * ws[m]) .+ secFinte
 

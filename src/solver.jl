@@ -41,7 +41,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
         while convIter == 0
             # Computes Tangent Stiffness Matrix KTk & Internal Forces
             intBool = 1 # Boolean to control computations of variables
-            Fintk, KTk = assembler(Section, MaterialModel, Mesh, Uk, ModelSol, time, AnalysisSettings, dispIter, intBool)
+            Fintk, KTk = assembler(Section, MaterialModel, Mesh, Uk, intBool)
 
             # Computes Uk & δUk
 
@@ -49,16 +49,16 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
                 Uk, δUk = NR(Uk, ModelSol, KTk, Fintk)
                 #λk = AnalysisSettings.loadFactors[time]    
             else
-                Uk, δUk, λk = AL(Uk, ModelSol, KTk, Fintk, time, analysisSettings, dispIter, varFext, currδu, convδu)
+                Uk, δUk, λk = AL(Uk, ModelSol, KTk, Fintk, time, AnalysisSettings, dispIter, varFext, currδu, convδu)
                 currδu = δUk + currδu
             end
 
             # Computes Fintk at computed Uk
             intBool = 1
-            Fintk, KTk = assembler(Section, MaterialModel, Mesh, Uk, ModelSol, time, AnalysisSettings, dispIter, intBool)
+            Fintk, KTk = assembler(Section, MaterialModel, Mesh, Uk, intBool)
 
             # Check convergence
-            cond, convIter = convergenceCheck(ModelSol.freeDofs, Uk, δUk, ModelSol.Fextk, Fintk, AnalysisSettings, dispIter, time)
+            cond, convIter = convergence_check(ModelSol.freeDofs, Uk, δUk, ModelSol.Fextk, Fintk, AnalysisSettings, dispIter, time)
 
             # Stores results if convergence
             if convIter == 1

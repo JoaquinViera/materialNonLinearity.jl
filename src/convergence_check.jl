@@ -1,6 +1,6 @@
 # Check convergence
 
-function convergenceCheck(freeDofs, Uk, δUk, Fextk, Fintk, analysisSettings, dispIter, time)
+function convergence_check(freeDofs, Uk, δUk, Fextk, Fintk, analysisSettings, dispIter, time)
 
     Fext_red = Fextk[freeDofs]
 

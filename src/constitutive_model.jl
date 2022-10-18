@@ -2,7 +2,7 @@
 # Computes stress and tangent modulus
 #
 
-function constitutiveModel(material, epsk)
+function constitutive_model(material, epsk)
 
     E = material.E
 
