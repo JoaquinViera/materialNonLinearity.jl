@@ -3,7 +3,7 @@
 # ===============================================
 
 # Load solver module
-using materialNonLinearity, Plots
+using materialNonLinearity, Plots, LinearAlgebra
 
 # example name
 problemName = "CantileverEPP"
@@ -13,7 +13,7 @@ problemName = "CantileverEPP"
 # =======================================
 E = 210e6
 σY = 250e3
-K = E / 500
+K = -E / 500
 matName = "isotropicBiLinear"
 matParams = [E, σY, K]
 
@@ -75,7 +75,7 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 tolk = 50 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-nLoadSteps = 100 # Number of load increments
+nLoadSteps = 250 # Number of load increments
 loadFactorsVec = ones(nLoadSteps) # Load scaling factors
 
 # Numerical method settings struct
@@ -127,12 +127,16 @@ thetaNum = matUk[dofT, 2]
 
 kappaHistElem = zeros(nelems, nLoadSteps)
 
+rotXYXZ = Diagonal(ones(4, 4))
+rotXYXZ[2, 2] = -1
+rotXYXZ[4, 4] = -1
+
 for j in 1:nelems
     nodeselem = StrMesh.conecMat[j, 3]
     elemdofs = nodes2dofs(nodeselem[:], 2)
     local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 2)
     UkeL = R' * matUk[elemdofs, 1:end]
-    Be = internFunction(0, l)
+    Be = intern_function(0, l) * rotXYXZ
     kappaelem = Be * UkeL
     kappaHistElem[j, :] = abs.(kappaelem)
 end
@@ -152,10 +156,12 @@ for i in 1:nLoadSteps
     end
 end
 
-fig = plot(kappaHistElem[elem, :], Mana, markershape=:circle, lw=lw, ms=ms)
-plot!(fig, kappaHistElem[elem, :], mVec, markershape=:rect, lw=lw, ms=ms)
+My = σY * b * h^2 / 6
 
-err = (mVec[2:end] - Mana[2:end]) ./ Mana[2:end] * 100
+fig = plot(kappaHistElem[elem, :], Mana, markershape=:circle, lw=lw, ms=ms)
+plot!(fig, kappaHistElem[elem, :], abs.(mVec), markershape=:rect, lw=lw, ms=ms)
+
+err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
 maxErr = maximum(err)
 
 # Check KTe
@@ -165,5 +171,5 @@ Iy = StrSections.Iy
 E = StrMaterialModels.E
 
 Finte, KTe = finte_KT_int(StrMaterialModels, l, StrSections.params, Uke, 1)
-Kana = E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2]
+Kana = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2] * rotXYXZ
 

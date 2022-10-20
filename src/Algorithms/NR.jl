@@ -12,7 +12,7 @@ function NR(Uk, ModelSol, KTk, Fintk)
     Fint_red = Fintk[freeDofs]
 
     r = Fext_red - Fint_red
-
+    #println(r)
     δUk = KTkred \ r
 
     # Computes Uk

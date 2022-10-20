@@ -2,8 +2,11 @@
 # Computes Internal force and tanget stiffness matrix
 #
 
-function finte_KT_int(material, l, secParams, Uke, intBool)
+function finte_KT_int(MaterialModel, l, secParams, Uke, intBool)
 
+    rotXYXZ = Diagonal(ones(4, 4))
+    rotXYXZ[2, 2] = -1
+    rotXYXZ[4, 4] = -1
 
     KTe = zeros(4, 4)
     Finte = zeros(4)
@@ -13,8 +16,8 @@ function finte_KT_int(material, l, secParams, Uke, intBool)
     h = secParams[2]
 
     # Gauss points
-    ne = 30
-    ns = 30
+    ne = 16
+    ns = 16
     xge, we = gausslegendre(ne)
     xgs, ws = gausslegendre(ns)
 
@@ -29,21 +32,23 @@ function finte_KT_int(material, l, secParams, Uke, intBool)
         pge = pgeVec[j]
 
         # Bending inter functions second derivative
-        B = internFunction(pge, l)
+
+        B = intern_function(pge, l) * rotXYXZ
+        #B = intern_function(pge, l)
 
         # Strain array
-        epskVec = -pgsVec * B * Uke
+        εₖVec = -pgsVec * B * Uke
 
         for m in 1:length(ws)
             pgs = pgsVec[m]
-            epsk = epskVec[m]
+            εₖ = εₖVec[m]
 
-            sigma, dsigdeps = constitutive_model(material, epsk)
+            σ, ∂σ∂ε = constitutive_model(MaterialModel, εₖ)
 
-            secFinte = h / 2 * (b * (-B') * pgs * sigma * ws[m]) .+ secFinte
+            secFinte = h / 2 * (b * (-B') * pgs * σ * ws[m]) .+ secFinte
 
             if intBool == 1
-                secKTe = l / 2 * (b * dsigdeps * pgs^2 * ws[m]) + secKTe
+                secKTe = l / 2 * (b * ∂σ∂ε * pgs^2 * ws[m]) + secKTe
             end
 
         end # endfor ws
@@ -61,7 +66,7 @@ function finte_KT_int(material, l, secParams, Uke, intBool)
     return Finte, KTe
 end
 
-function internFunction(x, l)
+function intern_function(x, l)
     N1 = (12x - 6l) / l^3
     N2 = (6x - 4l) / l^2
     N3 = -(12x - 6l) / l^3

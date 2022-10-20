@@ -14,23 +14,24 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
         println(time)
 
         # Sets current disp Vector
-        Uk = ModelSol.matUk[:, time]
+        Uₖ = ModelSol.matUk[:, time]
         convδu = ModelSol.convδu[:, time]
         currδu = zeros(length(ModelSol.freeDofs))
         #println(size(currδu))
         NRBool = 0
         # increment external force
         if NRBool == 1
-            λk = AnalysisSettings.loadFactors[time]
+            λₖ = AnalysisSettings.loadFactors[time]
         else # AL
             if time == 1
-                λk = 0
+                λₖ = 0
             else
-                λk = ModelSol.loadFactors[time]
+                λₖ = ModelSol.loadFactors[time]
             end
         end
 
-        ModelSol.Fextk = ModelSol.Fextk + λk * varFext
+        ModelSol.Fextk = ModelSol.Fextk + λₖ * varFext
+
         ModelSol.matFext = hcat(ModelSol.matFext, ModelSol.Fextk)
 
         # Iters
@@ -39,36 +40,35 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
 
 
         while convIter == 0
-            # Computes Tangent Stiffness Matrix KTk & Internal Forces
+            # Computes Tangent Stiffness Matrix KTₖ & Internal Forces
             intBool = 1 # Boolean to control computations of variables
-            Fintk, KTk = assembler(Section, MaterialModel, Mesh, Uk, intBool)
+            Fintₖ, KTₖ = assembler(Section, MaterialModel, Mesh, Uₖ, intBool)
 
-            # Computes Uk & δUk
+            # Computes Uₖ & δUₖ
 
             if NRBool == 1
-                Uk, δUk = NR(Uk, ModelSol, KTk, Fintk)
-                #λk = AnalysisSettings.loadFactors[time]    
+                Uₖ, δUₖ = NR(Uₖ, ModelSol, KTₖ, Fintₖ)
+                #λₖ = AnalysisSettings.loadFactors[time]    
             else
-                Uk, δUk, λk = AL(Uk, ModelSol, KTk, Fintk, time, AnalysisSettings, dispIter, varFext, currδu, convδu)
-                currδu = δUk + currδu
+                Uₖ, δUₖ, λₖ = AL(Uₖ, ModelSol, KTₖ, Fintₖ, time, AnalysisSettings, dispIter, varFext, currδu, convδu)
+                currδu = δUₖ + currδu
             end
 
-            # Computes Fintk at computed Uk
+            # Computes Fintₖ at computed Uₖ
             intBool = 1
-            Fintk, KTk = assembler(Section, MaterialModel, Mesh, Uk, intBool)
+            Fintₖ, KTₖ = assembler(Section, MaterialModel, Mesh, Uₖ, intBool)
 
             # Check convergence
-            cond, convIter = convergence_check(ModelSol.freeDofs, Uk, δUk, ModelSol.Fextk, Fintk, AnalysisSettings, dispIter, time)
+            cond, convIter = convergence_check(ModelSol.freeDofs, Uₖ, δUₖ, ModelSol.Fextk, Fintₖ, AnalysisSettings, dispIter, time)
 
             # Stores results if convergence
             if convIter == 1
-                #println("cond $cond")
-                #neigs = sum(eigvals(KTk) .< 0)
-                #println("number of negative eigs $neigs")
-                ModelSol.loadFactors = hcat(ModelSol.loadFactors, λk)
-                ModelSol.convδu = hcat(ModelSol.convδu, δUk)
-                ModelSol.matUk = hcat(ModelSol.matUk, Uk)
-                ModelSol.matFint = hcat(ModelSol.matFint, Fintk)
+                neigs = sum(eigvals(KTₖ[ModelSol.freeDofs, ModelSol.freeDofs]) .< 0)
+                println("number of negative eigs $neigs")
+                ModelSol.loadFactors = hcat(ModelSol.loadFactors, λₖ)
+                ModelSol.convδu = hcat(ModelSol.convδu, δUₖ)
+                ModelSol.matUk = hcat(ModelSol.matUk, Uₖ)
+                ModelSol.matFint = hcat(ModelSol.matFint, Fintₖ)
                 IterData.stopCrit = vcat(IterData.stopCrit, cond)
             end
 

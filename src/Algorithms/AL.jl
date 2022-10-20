@@ -1,5 +1,4 @@
-function AL(Uk, ModelSol, KTk, Fintk, time, analysisSettings, dispIter, varFext, currδu, convδu)
-
+function AL(Uₖ, ModelSol, KTₖ, Fintk, time, analysisSettings, dispIter, varFext, currδu, convδu)
 
 
     Fextk = ModelSol.Fextk
@@ -8,13 +7,13 @@ function AL(Uk, ModelSol, KTk, Fintk, time, analysisSettings, dispIter, varFext,
     Fext_red = Fextk[freeDofs]
     Fint_red = Fintk[freeDofs]
     varFext = varFext[freeDofs]
-    KTkred = KTk[freeDofs, freeDofs]
+    KTₖ_red = KTₖ[freeDofs, freeDofs]
 
     r = [Fext_red - Fint_red varFext]
-    deltas = KTkred \ r
+    deltas = KTₖ_red \ r
 
-    δu_ast = deltas[:, 1]
-    δu_bar = deltas[:, 2]
+    δu⃰ = deltas[:, 1]
+    δū = deltas[:, 2]
 
     incremArcLen = 1e-4
     initialDeltaLambda = 1e-2
@@ -31,28 +30,28 @@ function AL(Uk, ModelSol, KTk, Fintk, time, analysisSettings, dispIter, varFext,
     end
 
     if dispIter == 1 # Predictor
-        if norm(Uk) == 0
+        if norm(Uₖ) == 0
             #δλ = analysisSettings.initialDeltaLambda
             δλ = initialDeltaLambda
         else
-            δλ = sign((convδu' * (arcLengthNorm .* δu_bar))) * Δl / sqrt(δu_bar' * (arcLengthNorm .* δu_bar))
+            δλ = sign((convδu' * (arcLengthNorm .* δū))) * Δl / sqrt(δū' * (arcLengthNorm .* δū))
         end
     else # Jirasek method
         #controlDofs = freeDofs[end-1]
         controlDofs = 10
-        scalingProjection = -1
+        scalingProjection = 1
         # controlDofs = analysisSettings.controlDofs # ajustar esto luego
         #scalingProjection = analysisSettings.sign
-        c = zeros(length(Uk))
+        c = zeros(length(Uₖ))
         c[controlDofs] = scalingProjection
         c = c[freeDofs]
-        δλ = (Δl - c' * currδu - c' * δu_ast) / (c' * δu_bar)
+        δλ = (Δl - c' * currδu - c' * δu⃰) / (c' * δū)
     end
 
-    δUk = δu_ast + δλ * δu_bar
+    δUₖ = δu⃰ + δλ * δū
 
-    Uk[freeDofs] = Uk[freeDofs] + δUk
+    Uₖ[freeDofs] = Uₖ[freeDofs] + δUₖ
 
-    return Uk, δUk, δλ
+    return Uₖ, δUₖ, δλ
 
 end
