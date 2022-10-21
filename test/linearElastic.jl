@@ -85,6 +85,7 @@ StrAnalysisSettings = AnalysisSettings(tolk, tolu, tolf, loadFactorsVec)
 sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings)
 
 # Check KTe
+Iy = StrSections.Iy
 Uke = zeros(4)
 l = 1
 rotXYXZ = Diagonal(ones(4, 4))
@@ -100,7 +101,6 @@ Kana = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l;
 # Check First step
 # --------------------------------
 P = abs(Fy)
-Iy = StrSections.Iy
 # Analytical solution
 Man = -P * L
 δan = -P * L^3 / (3 * E * Iy)
