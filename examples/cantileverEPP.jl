@@ -13,7 +13,7 @@ problemName = "CantileverEPP"
 # =======================================
 E = 210e6
 σY = 250e3
-K = -E / 500
+K = -E / 100
 matName = "isotropicBiLinear"
 matParams = [E, σY, K]
 
@@ -35,7 +35,7 @@ StrSections = Section(secName, secParams)
 
 # Nodes
 L = 1
-nnodes = 21
+nnodes = 101
 xcoords = collect(LinRange(0, L, nnodes))
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
@@ -75,7 +75,7 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 tolk = 50 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-nLoadSteps = 250 # Number of load increments
+nLoadSteps = 350 # Number of load increments
 loadFactorsVec = ones(nLoadSteps) # Load scaling factors
 
 # Numerical method settings struct
@@ -146,13 +146,21 @@ end
 
 Mana = zeros(nLoadSteps)
 C = E * K / (E + K)
+epsY = σY / E
+eps_ast = epsY - σY / C
+kappa_ast = 2 * eps_ast / h
 elem = 1
 for i in 1:nLoadSteps
     kappak = kappaHistElem[elem, i]
     if kappak <= kappae
         Mana[i] = E * StrSections.Iy * kappak
-    else
+    elseif kappak <= kappa_ast
         Mana[i] = σY * b * h^2 / 12 * (3 - kappae^2 / kappak^2 + kappak / kappae * C / E * (2 - 3 * kappae / kappak + kappae^3 / kappak^3))
+    else
+        zy = epsY / kappak
+        z0 = eps_ast / kappak
+        zs = z0 - zy
+        Mana[i] = 2 * zy^2 * σY * b / 3 + zs * σY * b * (zy + (z0 - zy) / 3)
     end
 end
 
@@ -173,3 +181,21 @@ E = StrMaterialModels.E
 Finte, KTe = finte_KT_int(StrMaterialModels, l, StrSections.params, Uke, 1)
 Kana = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2] * rotXYXZ
 
+mNum = "mNum.txt"
+f = open(mNum, "w")
+
+for i in mVec
+    println(f, abs(i))
+end
+
+
+close(f)
+
+kappa = "kappa.txt"
+f = open(kappa, "w")
+
+for i in kappaHistElem[elem, :]
+    println(f, i)
+end
+
+close(f)

@@ -17,10 +17,12 @@ function constitutive_model(MaterialModel, εₖ)
             εY = σY / E
             ∂σ∂ε = E * K / (E + K)
             σ = σY * sign(εₖ) + ∂σ∂ε * (εₖ - εY * sign(εₖ))
+
             if ∂σ∂ε < 0 && sign(σ) != sign(σY * sign(εₖ))
                 σ = 0
                 ∂σ∂ε = 0
             end
+
         else
             ∂σ∂ε = E
             σ = E * εₖ

@@ -15,7 +15,8 @@ function AL(Uₖ, ModelSol, KTₖ, Fintk, time, analysisSettings, dispIter, varF
     δu⃰ = deltas[:, 1]
     δū = deltas[:, 2]
 
-    incremArcLen = 1e-4
+    incremArcLen = 1e-5
+
     initialDeltaLambda = 1e-2
     arcLengthNorm = zeros(length(freeDofs))
     arcLengthNorm[1:2:end] .= 1
