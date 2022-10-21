@@ -18,7 +18,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
         convδu = ModelSol.convδu[:, time]
         currδu = zeros(length(ModelSol.freeDofs))
         #println(size(currδu))
-        NRBool = 0
+        NRBool = 1
         # increment external force
         if NRBool == 1
             λₖ = AnalysisSettings.loadFactors[time]
