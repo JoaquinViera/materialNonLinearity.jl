@@ -9,10 +9,23 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
     # Counters
     time = 1
     nTimes = IterData.nTimes
+    λₖ = AnalysisSettings.loadFactors[time]
+
+    # Progress print
+
+    progressFrame = round((nTimes - 1) / 5)
+    if progressFrame == 0
+        counter = 5
+    else
+        counter = 0
+    end
 
     while nTimes > time
-        println(time)
 
+        if time == counter * progressFrame + 1
+            println("$(counter * 20) %")
+            counter = counter + 1
+        end
         # Sets current disp Vector
         Uₖ = ModelSol.matUk[:, time]
         convδu = ModelSol.convδu[:, time]
@@ -20,24 +33,17 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
         #println(size(currδu))
         NRBool = 1
         # increment external force
-        if NRBool == 1
-            λₖ = AnalysisSettings.loadFactors[time]
-        else # AL
-            if time == 1
-                λₖ = 0
-            else
-                λₖ = ModelSol.loadFactors[time]
-            end
+
+        if time > 1
+            λₖ = ModelSol.loadFactors[time]
         end
 
         ModelSol.Fextk = ModelSol.Fextk + λₖ * varFext
-
         ModelSol.matFext = hcat(ModelSol.matFext, ModelSol.Fextk)
 
         # Iters
         dispIter = 0 # iter counter
         convIter = 0 # Convergence control parameter
-
 
         while convIter == 0
             # Computes Tangent Stiffness Matrix KTₖ & Internal Forces
@@ -48,7 +54,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
 
             if NRBool == 1
                 Uₖ, δUₖ = NR(Uₖ, ModelSol, KTₖ, Fintₖ)
-                #λₖ = AnalysisSettings.loadFactors[time]    
+                λₖ = AnalysisSettings.loadFactors[time]
             else
                 Uₖ, δUₖ, λₖ = AL(Uₖ, ModelSol, KTₖ, Fintₖ, time, AnalysisSettings, dispIter, varFext, currδu, convδu)
                 currδu = δUₖ + currδu
@@ -64,7 +70,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
             # Stores results if convergence
             if convIter == 1
                 neigs = sum(eigvals(KTₖ[ModelSol.freeDofs, ModelSol.freeDofs]) .< 0)
-                println("number of negative eigs $neigs")
+                #println("number of negative eigs $neigs")
                 ModelSol.loadFactors = hcat(ModelSol.loadFactors, λₖ)
                 ModelSol.convδu = hcat(ModelSol.convδu, δUₖ)
                 ModelSol.matUk = hcat(ModelSol.matUk, Uₖ)
