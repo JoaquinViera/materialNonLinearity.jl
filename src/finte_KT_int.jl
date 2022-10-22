@@ -2,7 +2,7 @@
 # Computes Internal force and tanget stiffness matrix
 #
 
-function finte_KT_int(MaterialModel, l, secParams, Uke, intBool)
+function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
 
     rotXYXZ = Diagonal(ones(4, 4))
     rotXYXZ[2, 2] = -1
@@ -43,7 +43,7 @@ function finte_KT_int(MaterialModel, l, secParams, Uke, intBool)
             pgs = pgsVec[m]
             εₖ = εₖVec[m]
 
-            σ, ∂σ∂ε = constitutive_model(MaterialModel, εₖ)
+            σ, ∂σ∂ε = constitutive_model(ElemMaterialModel, εₖ)
 
             secFinte = h / 2 * (b * (-B') * pgs * σ * ws[m]) .+ secFinte
 

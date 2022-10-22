@@ -4,41 +4,25 @@
 # Material 
 # ============================================================================
 
-struct MaterialModel{Real}
-    name::String
-    params::Vector{Real}
+abstract type MaterialModel end
+
+struct LinearElastic <: MaterialModel
+    E::Real
+end
+
+function LinearElastic(; E::Real)
+    LinearElastic(E)
+end
+
+struct IsotropicBiLinear <: MaterialModel
     E::Real
     σY0::Real
     K::Real
 end
-# Constructor
-function MaterialModel(name, params::Vector)
-    if cmp(name, "linearElastic") == 1 && cmp(name, "isotropicBiLinear") == 1
-        error("Current models are linearElastic & isotropicBiLinear.")
-    else
-        if cmp(name, "linearElastic") == 0
-            length(params) != 1 ? error("Define only Young Modulus.") : nothing
-            E = params[1]
-            σY0 = 0.0
-            K = 0.0
-        elseif cmp(name, "isotropicBiLinear") == 0
-            length(params) != 2 && length(params) != 3 ? error("Define at least 2 parameters.") : nothing
-            E = params[1]
-            σY0 = params[2]
-            length(params) == 2 ? K = 0.0 : K = params[3]
-        end
-        return MaterialModel(name, params, E, σY0, K)
-    end
-end
 
-#=
-matName = "linearElastic"
-matName2 = "isotropicBiLinear"
-matParams = [10.0]
-matParams2 = [10.0, 1.0, 7]
-mat1 = MaterialModel(matName, matParams)
-mat2 = MaterialModel(matName2, matParams2)
-=#
+function IsotropicBiLinear(; E::Real, σY0::Real, K::Real)
+    IsotropicBiLinear(E, σY0, K)
+end
 
 # ============================================================================
 # Section

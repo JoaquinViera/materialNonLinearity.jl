@@ -13,12 +13,15 @@ problemName = "CantileverEPP"
 # =======================================
 E = 210e6
 σY = 250e3
-K = -E / 100
+K = E / 100
 matName = "isotropicBiLinear"
 matParams = [E, σY, K]
 
 # Materials struct
-StrMaterialModels = MaterialModel(matName, matParams)
+#StrMaterialModels = MaterialModel(matName, matParams)
+
+#StrMaterialModels = LinearElastic(E)
+StrMaterialModels = IsotropicBiLinear(E, σY, K)
 
 # Define section
 # =======================================
@@ -35,7 +38,7 @@ StrSections = Section(secName, secParams)
 
 # Nodes
 L = 1
-nnodes = 101
+nnodes = 31
 xcoords = collect(LinRange(0, L, nnodes))
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
@@ -75,7 +78,7 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 tolk = 50 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-nLoadSteps = 350 # Number of load increments
+nLoadSteps = 100 # Number of load increments
 loadFactorsVec = ones(nLoadSteps) # Load scaling factors
 
 # Numerical method settings struct
@@ -147,20 +150,21 @@ end
 Mana = zeros(nLoadSteps)
 C = E * K / (E + K)
 epsY = σY / E
-eps_ast = epsY - σY / C
+#eps_ast = epsY - σY / C
 kappa_ast = 2 * eps_ast / h
 elem = 1
 for i in 1:nLoadSteps
     kappak = kappaHistElem[elem, i]
     if kappak <= kappae
         Mana[i] = E * StrSections.Iy * kappak
-    elseif kappak <= kappa_ast
-        Mana[i] = σY * b * h^2 / 12 * (3 - kappae^2 / kappak^2 + kappak / kappae * C / E * (2 - 3 * kappae / kappak + kappae^3 / kappak^3))
+        #   elseif kappak <= kappa_ast
     else
-        zy = epsY / kappak
-        z0 = eps_ast / kappak
-        zs = z0 - zy
-        Mana[i] = 2 * zy^2 * σY * b / 3 + zs * σY * b * (zy + (z0 - zy) / 3)
+        Mana[i] = σY * b * h^2 / 12 * (3 - kappae^2 / kappak^2 + kappak / kappae * C / E * (2 - 3 * kappae / kappak + kappae^3 / kappak^3))
+        #  else
+        #     zy = epsY / kappak
+        #    z0 = eps_ast / kappak
+        #   zs = z0 - zy
+        #  Mana[i] = 2 * zy^2 * σY * b / 3 + zs * σY * b * (zy + (z0 - zy) / 3)
     end
 end
 

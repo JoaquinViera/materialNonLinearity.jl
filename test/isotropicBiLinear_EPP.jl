@@ -12,14 +12,11 @@ problemName = "isotropicBiLinear_EPP"
 # Define material model
 # =======================================
 E = 210e6
-σY = 250e3
+σY0 = 250e3
 K = 0
-matName = "isotropicBiLinear"
-matParams = [E, σY, K]
 
 # Materials struct
-StrMaterialModels = MaterialModel(matName, matParams)
-
+StrMaterialModels = IsotropicBiLinear(E, σY0, K)
 # Define section
 # =======================================
 b = 0.1

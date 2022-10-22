@@ -11,11 +11,10 @@ problemName = "linearElastic"
 # Define material model
 # =======================================
 E = 210e6
-matName = "linearElastic"
-matParams = [E]
 
 # Materials struct
-StrMaterialModels = MaterialModel(matName, matParams)
+#StrMaterialModels = MaterialModel(matName, matParams)
+StrMaterialModels = LinearElastic(E)
 
 # Define section
 # =======================================
