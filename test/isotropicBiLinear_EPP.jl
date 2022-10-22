@@ -96,7 +96,7 @@ sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundar
 # --------------------------------
 P = abs(Fy)
 Iy = StrSections.Iy
-κe = 2 * σY / (E * h)
+κe = 2 * σY0 / (E * h)
 
 # Numerical solution
 matFint = sol.matFint
@@ -131,8 +131,8 @@ end
 
 Mana = zeros(nLoadStε)
 C = E * K / (E + K)
-εY = σY / E
-ε⃰ = εY - σY / C
+εY = σY0 / E
+ε⃰ = εY - σY0 / C
 κ⃰ = 2 * ε⃰ / h
 elem = 1
 for i in 1:nLoadStε
@@ -140,7 +140,7 @@ for i in 1:nLoadStε
     if κₖ <= κe
         Mana[i] = E * StrSections.Iy * κₖ
     else
-        Mana[i] = σY * b * h^2 / 12 * (3 - κe^2 / κₖ^2 + κₖ / κe * C / E * (2 - 3 * κe / κₖ + κe^3 / κₖ^3))
+        Mana[i] = σY0 * b * h^2 / 12 * (3 - κe^2 / κₖ^2 + κₖ / κe * C / E * (2 - 3 * κe / κₖ + κe^3 / κₖ^3))
     end
 end
 
