@@ -1,18 +1,21 @@
 # ===============================================
-# Cantilever with linear elastic material model 
+# Cantilever with elasto plastic material model 
 # ===============================================
 
 # Load solver module
 using materialNonLinearity, LinearAlgebra
 
 # example name
-problemName = "linearElastic"
+problemName = "isotropicBiLinear_EPP"
+
 
 # Define material model
 # =======================================
 E = 210e6
-matName = "linearElastic"
-matParams = [E]
+σY = 250e3
+K = 0
+matName = "isotropicBiLinear"
+matParams = [E, σY, K]
 
 # Materials struct
 StrMaterialModels = MaterialModel(matName, matParams)
@@ -32,7 +35,7 @@ StrSections = Section(secName, secParams)
 
 # Nodes
 L = 1
-nnodes = 11
+nnodes = 31
 xcoords = collect(LinRange(0, L, nnodes))
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
@@ -72,11 +75,19 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 tolk = 50 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-nLoadSteps = 2 # Number of load increments
-loadFactorsVec = ones(nLoadSteps) # Load scaling factors
+nLoadStε = 63 # Number of load increments
+loadFactorsVec = ones(nLoadStε) # Load scaling factors
 
 # Numerical method settings struct
 StrAnalysisSettings = AnalysisSettings(tolk, tolu, tolf, loadFactorsVec)
+
+# Plot parameters
+# =======================================
+lw = 3
+ms = 2
+color = "black"
+
+strPlots = PlotSettings(lw, ms, color)
 
 # ===============================================
 # Process model parameters
@@ -84,27 +95,11 @@ StrAnalysisSettings = AnalysisSettings(tolk, tolu, tolf, loadFactorsVec)
 
 sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings)
 
-# Check KTe
-Iy = StrSections.Iy
-Uke = zeros(4)
-l = 1
-rotXYXZ = Diagonal(ones(4, 4))
-rotXYXZ[2, 2] = -1
-rotXYXZ[4, 4] = -1
-
-Finte, KTe = finte_KT_int(StrMaterialModels, l, StrSections.params, Uke, 1)
-Kana = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2] * rotXYXZ
-
-
-
-
-# Check First step
+# Auxiliar
 # --------------------------------
 P = abs(Fy)
-# Analytical solution
-Man = -P * L
-δan = -P * L^3 / (3 * E * Iy)
-θan = P * L^2 / (2 * E * Iy)
+Iy = StrSections.Iy
+κe = 2 * σY / (E * h)
 
 # Numerical solution
 matFint = sol.matFint
@@ -112,16 +107,44 @@ matUk = sol.matUk
 
 nod = 1
 dofM = nod * 2
-dofD = nnodes * 2 - 1
-dofT = nnodes * 2
 
 mVec = matFint[dofM, :]
 
-Mnum = mVec[2]
-δNum = matUk[dofD, 2]
-θNum = matUk[dofT, 2]
+# Computes curvatures
+# --------------------------------
 
-@test abs(Mnum - Man) <= tolf
-@test abs(δNum - δan) <= tolu
-@test abs(θNum - θan) <= tolu
-@test norm(KTe - Kana) <= 1e-6
+kappaHistElem = zeros(nelems, nLoadStε)
+
+rotXYXZ = Diagonal(ones(4, 4))
+rotXYXZ[2, 2] = -1
+rotXYXZ[4, 4] = -1
+
+for j in 1:nelems
+    nodeselem = StrMesh.conecMat[j, 3]
+    elemdofs = nodes2dofs(nodeselem[:], 2)
+    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 2)
+    UkeL = R' * matUk[elemdofs, 1:end]
+    Be = intern_function(0, l) * rotXYXZ
+    kappaelem = Be * UkeL
+    kappaHistElem[j, :] = abs.(kappaelem)
+end
+
+# Analytical solution M-κ
+# --------------------------------
+
+Mana = zeros(nLoadStε)
+C = E * K / (E + K)
+εY = σY / E
+ε⃰ = εY - σY / C
+κ⃰ = 2 * ε⃰ / h
+elem = 1
+for i in 1:nLoadStε
+    κₖ = kappaHistElem[elem, i]
+    if κₖ <= κe
+        Mana[i] = E * StrSections.Iy * κₖ
+    else
+        Mana[i] = σY * b * h^2 / 12 * (3 - κe^2 / κₖ^2 + κₖ / κe * C / E * (2 - 3 * κe / κₖ + κe^3 / κₖ^3))
+    end
+end
+
+@test (maximum(abs.(abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end])) <= 1e-2
