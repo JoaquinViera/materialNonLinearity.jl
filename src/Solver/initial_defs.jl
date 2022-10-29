@@ -17,11 +17,11 @@ function initial_defs(Mesh, BoundaryConds, AnalysisSettings)
     end
 
     # Solution parameters
-    Uk = zeros(ndofs * nnodes)
+    Uₖ = zeros(ndofs * nnodes)
     Fextk = zeros(ndofs * nnodes)
     Fintk = zeros(ndofs * nnodes)
 
-    matUk = vcat(Uk, []) # Matrix to store disps
+    matUₖ = vcat(Uₖ, []) # Matrix to store disps
     matFext = vcat(Fextk, []) # Matrix to store applied external forces
     matFint = vcat(Fintk, []) # Matrix to store interal forces 
 
@@ -47,10 +47,10 @@ function initial_defs(Mesh, BoundaryConds, AnalysisSettings)
     deleteat!(free_dofs, fixed_dofs)
 
 
-    δUk = zeros(length(free_dofs))
+    δUₖ = zeros(length(free_dofs))
 
     # store struct
-    ModelStore = ModelSol(Uk, δUk, Fextk, Fintk, matUk, matFext, matFint, free_dofs, [0.0])
+    ModelStore = ModelSol(Uₖ, δUₖ, Fextk, Fintk, matUₖ, matFext, matFint, free_dofs, [0.0])
     IterData = IterParams(nTimes, stopCrit)
 
     return ModelStore, IterData, varFext

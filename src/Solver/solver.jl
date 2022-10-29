@@ -12,7 +12,6 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
     λₖ = AnalysisSettings.loadFactors[time]
 
     # Progress print
-
     progressFrame = round((nTimes - 1) / 5)
     if progressFrame == 0
         counter = 5
@@ -30,14 +29,11 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
         Uₖ = ModelSol.matUk[:, time]
         convδu = ModelSol.convδu[:, time]
         currδu = zeros(length(ModelSol.freeDofs))
-        #println(size(currδu))
-        NRBool = 1
-        # increment external force
 
+        # increment external force
         if time > 1
             λₖ = ModelSol.loadFactors[time]
         end
-
         ModelSol.Fextk = ModelSol.Fextk + λₖ * varFext
         ModelSol.matFext = hcat(ModelSol.matFext, ModelSol.Fextk)
 
@@ -51,14 +47,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
             Fintₖ, KTₖ = assembler(Section, MaterialModel, Mesh, Uₖ, intBool)
 
             # Computes Uₖ & δUₖ
-
-            if NRBool == 1
-                Uₖ, δUₖ = NR(Uₖ, ModelSol, KTₖ, Fintₖ)
-                λₖ = AnalysisSettings.loadFactors[time]
-            else
-                Uₖ, δUₖ, λₖ = AL(Uₖ, ModelSol, KTₖ, Fintₖ, time, AnalysisSettings, dispIter, varFext, currδu, convδu)
-                currδu = δUₖ + currδu
-            end
+            Uₖ, δUₖ, λₖ, currδu = step!(AnalysisSettings, Uₖ, ModelSol, KTₖ, Fintₖ, time, dispIter, varFext, currδu, convδu)
 
             # Computes Fintₖ at computed Uₖ
             intBool = 1

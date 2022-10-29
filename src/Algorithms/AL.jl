@@ -1,5 +1,14 @@
-function AL(Uₖ, ModelSol, KTₖ, Fintk, time, analysisSettings, dispIter, varFext, currδu, convδu)
+# Arc-Length 
+# =====================================
 
+struct ArcLength <: AbstractAlgorithm
+    tolk::Float64
+    tolu::Float64
+    tolf::Float64
+    loadFactors::Vector{Float64}
+end
+
+function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, dispIter, varFext, currδu, convδu)
 
     Fextk = ModelSol.Fextk
     freeDofs = ModelSol.freeDofs
@@ -15,7 +24,7 @@ function AL(Uₖ, ModelSol, KTₖ, Fintk, time, analysisSettings, dispIter, varF
     δu⃰ = deltas[:, 1]
     δū = deltas[:, 2]
 
-    incremArcLen = 1e-5
+    incremArcLen = 1e-3
 
     initialDeltaLambda = 1e-2
     arcLengthNorm = zeros(length(freeDofs))
@@ -52,7 +61,8 @@ function AL(Uₖ, ModelSol, KTₖ, Fintk, time, analysisSettings, dispIter, varF
     δUₖ = δu⃰ + δλ * δū
 
     Uₖ[freeDofs] = Uₖ[freeDofs] + δUₖ
+    currδu = δUₖ + currδu
 
-    return Uₖ, δUₖ, δλ
+    return Uₖ, δUₖ, δλ, currδu
 
 end

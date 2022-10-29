@@ -74,7 +74,8 @@ nLoadStε = 63 # Number of load increments
 loadFactorsVec = ones(nLoadStε) # Load scaling factors
 
 # Numerical method settings struct
-StrAnalysisSettings = AnalysisSettings(tolk, tolu, tolf, loadFactorsVec)
+#StrAnalysisSettings = AnalysisSettings(tolk, tolu, tolf, loadFactorsVec)
+StrAnalysisSettings = NewtonRaphson(tolk, tolu, tolf, loadFactorsVec)
 
 # Plot parameters
 # =======================================

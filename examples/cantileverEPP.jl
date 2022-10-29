@@ -13,7 +13,7 @@ problemName = "CantileverEPP"
 # =======================================
 E = 210e6
 σY = 250e3
-K = E / 100
+K = -E / 100
 matName = "isotropicBiLinear"
 matParams = [E, σY, K]
 
@@ -80,7 +80,7 @@ nLoadSteps = 100 # Number of load increments
 loadFactorsVec = ones(nLoadSteps) # Load scaling factors
 
 # Numerical method settings struct
-StrAnalysisSettings = AnalysisSettings(tolk, tolu, tolf, loadFactorsVec)
+StrAnalysisSettings = ArcLength(tolk, tolu, tolf, loadFactorsVec)
 
 # Plot parameters
 # =======================================
@@ -148,21 +148,21 @@ end
 Mana = zeros(nLoadSteps)
 C = E * K / (E + K)
 epsY = σY / E
-#eps_ast = epsY - σY / C
+eps_ast = epsY - σY / C
 kappa_ast = 2 * eps_ast / h
 elem = 1
 for i in 1:nLoadSteps
     kappak = kappaHistElem[elem, i]
     if kappak <= kappae
         Mana[i] = E * StrSections.Iy * kappak
-        #   elseif kappak <= kappa_ast
-    else
+    elseif kappak <= kappa_ast
+        #else
         Mana[i] = σY * b * h^2 / 12 * (3 - kappae^2 / kappak^2 + kappak / kappae * C / E * (2 - 3 * kappae / kappak + kappae^3 / kappak^3))
-        #  else
-        #     zy = epsY / kappak
-        #    z0 = eps_ast / kappak
-        #   zs = z0 - zy
-        #  Mana[i] = 2 * zy^2 * σY * b / 3 + zs * σY * b * (zy + (z0 - zy) / 3)
+    else
+        zy = epsY / kappak
+        z0 = eps_ast / kappak
+        zs = z0 - zy
+        Mana[i] = 2 * zy^2 * σY * b / 3 + zs * σY * b * (zy + (z0 - zy) / 3)
     end
 end
 
@@ -180,7 +180,7 @@ l = 1
 Iy = StrSections.Iy
 E = StrMaterialModels.E
 
-Finte, KTe = finte_KT_int(StrMaterialModels, l, StrSections.params, Uke, 1)
+Finte, KTe = finte_KT_int(StrMaterialModels, l, [b, h], Uke, 1)
 Kana = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2] * rotXYXZ
 
 mNum = "mNum.txt"

@@ -10,6 +10,6 @@ export LinearElastic, IsotropicBiLinear
 ## Section types
 export Rectangle
 ## Mesh, BC, AnalysisSettings, PlotSettings
-export Mesh, BoundaryConds, AnalysisSettings, PlotSettings
+export Mesh, BoundaryConds, AnalysisSettings, PlotSettings, NewtonRaphson, ArcLength
 ## Functions
 export finte_KT_int, element_geometry, intern_function
