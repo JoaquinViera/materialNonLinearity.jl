@@ -14,7 +14,7 @@ function assembler(Section, MaterialModel, Mesh, Uₖ, intBool)
         nodeselem = Mesh.conecMat[i, 3]
         elemdofs = nodes2dofs(nodeselem[:], ndofs)
         R, l = element_geometry(Mesh.nodesMat[nodeselem[1], :], Mesh.nodesMat[nodeselem[2], :], ndofs)
-        ElemSecParams = Section.params
+        ElemSecParams = [Section.b Section.h]
         ElemMaterial = MaterialModel
 
         # Elem disps in local system

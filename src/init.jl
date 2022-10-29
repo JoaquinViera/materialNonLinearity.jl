@@ -28,29 +28,20 @@ end
 # Section
 # ============================================================================
 
-struct Section{Real}
-    name::String
-    params::Vector{Real}
-    A::Float64
-    Iy::Float64
+abstract type Section end
+
+mutable struct Rectangle <: Section
+    b::Real
+    h::Real
+    A::Real
+    Iy::Real
 end
 
-function Section(name, params)
-    if cmp(name, "rectangle") == 0
-        length(params) != 2 ? error("Declare only width and height.") : nothing
-        A = params[1] * params[2]
-        Iy = params[1] * params[2]^3 / 12
-    else
-        error("To be implemented.")
-    end
-    return Section(name, params, A, Iy)
+function Rectangle(; b, h)
+    A = b * h
+    Iy = b * h^3 / 12
+    return Rectangle(b, h, A, Iy)
 end
-
-#=
-secName = "rectangle"
-secParams = [0.1, 0.6]
-secStr = Section(secName, secParams)
-=#
 
 # ============================================================================
 # Mesh

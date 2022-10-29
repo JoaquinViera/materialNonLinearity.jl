@@ -13,18 +13,15 @@ problemName = "linearElastic"
 E = 210e6
 
 # Materials struct
-#StrMaterialModels = MaterialModel(matName, matParams)
 StrMaterialModels = LinearElastic(E)
 
 # Define section
 # =======================================
 b = 0.1
 h = 0.1
-secName = "rectangle"
-secParams = [b, h]
 
 # Section struct
-StrSections = Section(secName, secParams)
+StrSections = Rectangle(; b, h)
 
 # Define Mesh
 # =======================================
@@ -91,7 +88,7 @@ rotXYXZ = Diagonal(ones(4, 4))
 rotXYXZ[2, 2] = -1
 rotXYXZ[4, 4] = -1
 
-Finte, KTe = finte_KT_int(StrMaterialModels, l, StrSections.params, Uke, 1)
+Finte, KTe = finte_KT_int(StrMaterialModels, l, [b, h], Uke, 1)
 Kana = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2] * rotXYXZ
 
 

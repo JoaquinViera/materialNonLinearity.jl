@@ -32,9 +32,7 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
         pge = pgeVec[j]
 
         # Bending inter functions second derivative
-
         B = intern_function(pge, l) * rotXYXZ
-        #B = intern_function(pge, l)
 
         # Strain array
         εₖVec = -pgsVec * B * Uke
@@ -44,7 +42,6 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
             εₖ = εₖVec[m]
 
             σ, ∂σ∂ε = constitutive_model(ElemMaterialModel, εₖ)
-
             secFinte = h / 2 * (b * (-B') * pgs * σ * ws[m]) .+ secFinte
 
             if intBool == 1
@@ -66,11 +63,3 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
     return Finte, KTe
 end
 
-function intern_function(x, l)
-    N1 = (12x - 6l) / l^3
-    N2 = (6x - 4l) / l^2
-    N3 = -(12x - 6l) / l^3
-    N4 = (6x - 2l) / l^2
-    f = [N1 N2 N3 N4]
-    return f
-end

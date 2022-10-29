@@ -1,6 +1,10 @@
-# =======================================
-# Computes nodal degrees of freedom 
-# =======================================
+
+
+
+## =======================================
+## Computes nodal degrees of freedom 
+## =======================================
+
 function nodes2dofs(nodes, ndofs)
 
     n = length(nodes)

@@ -8,30 +8,38 @@ include("deps.jl")
 # Structs definition
 include("init.jl")
 
-# solver initialization
-# -----------------------------------------------
-# Internal variables 
-include("initial_defs.jl")
-
-# General Functions
-include("nodes2dofs.jl")
-include("element_geometry.jl")
-
-# Main function
-include("solver.jl")
-include("assembler.jl")
-include("convergence_check.jl")
-
-# Numerical methods - Algorithms
-include("Algorithms/NR.jl")
-include("Algorithms/AL.jl")
-
-# Core functions
-include("finte_KT_int.jl")
-include("constitutive_model.jl")
-
-
 # Export functions
 include("exports.jl")
+
+# Utils functions
+include("Utils/utils.jl")
+
+
+# Element functions
+# -----------------------------------------------
+# Frame element
+include("Frame/frame_element.jl")
+
+# Solver 
+# -----------------------------------------------
+# Internal variables 
+include("Solver/initial_defs.jl")
+# Main function
+include("Solver/solver.jl")
+# Tanget stiffness matrix and internal forces computation
+include("Solver/finte_KT_int.jl")
+# Assembler
+include("Solver/assembler.jl")
+# Material models
+include("Solver/constitutive_model.jl")
+
+# Numerical methods - algorithms
+# -----------------------------------------------
+# Newton Raphson
+include("Algorithms/NR.jl")
+# Arc Length
+include("Algorithms/AL.jl")
+# Convergence check
+include("Algorithms/convergence_check.jl")
 
 end # module

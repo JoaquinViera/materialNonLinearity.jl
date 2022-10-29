@@ -8,7 +8,6 @@ using materialNonLinearity, LinearAlgebra
 # example name
 problemName = "isotropicBiLinear_EPP"
 
-
 # Define material model
 # =======================================
 E = 210e6
@@ -17,15 +16,14 @@ K = 0
 
 # Materials struct
 StrMaterialModels = IsotropicBiLinear(E, σY0, K)
+
 # Define section
 # =======================================
 b = 0.1
 h = 0.1
-secName = "rectangle"
-secParams = [b, h]
 
 # Section struct
-StrSections = Section(secName, secParams)
+StrSections = Rectangle(; b, h)
 
 # Define Mesh
 # =======================================

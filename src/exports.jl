@@ -8,7 +8,7 @@ export initial_defs, nodes2dofs, solver
 ## Material models
 export LinearElastic, IsotropicBiLinear
 ## Section types
-export Section
+export Rectangle
 ## Mesh, BC, AnalysisSettings, PlotSettings
 export Mesh, BoundaryConds, AnalysisSettings, PlotSettings
 ## Functions

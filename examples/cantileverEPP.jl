@@ -18,9 +18,6 @@ matName = "isotropicBiLinear"
 matParams = [E, σY, K]
 
 # Materials struct
-#StrMaterialModels = MaterialModel(matName, matParams)
-
-#StrMaterialModels = LinearElastic(E)
 StrMaterialModels = IsotropicBiLinear(E, σY, K)
 
 # Define section
@@ -31,7 +28,8 @@ secName = "rectangle"
 secParams = [b, h]
 
 # Section struct
-StrSections = Section(secName, secParams)
+#StrSections = Section(secName, secParams)
+StrSections = Rectangle(; b, h)
 
 # Define Mesh
 # =======================================
