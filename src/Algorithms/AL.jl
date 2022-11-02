@@ -7,7 +7,7 @@ struct ArcLength <: AbstractAlgorithm
     tolf::Float64
     nTimes::Float64
     initialDeltaLambda::Float64
-    arcLengthIncrem::Float64
+    arcLengthIncrem::Vector{Float64}
     controlDofs::Vector{Int64}
     scalingProjection::Float64
 end
@@ -33,8 +33,6 @@ function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, dispIter, var
     controlDofs = alg.controlDofs
     scalingProjection = alg.scalingProjection
 
-    #incremArcLen = 1e-3
-    #initialDeltaLambda = 1e-2
     arcLengthNorm = zeros(length(freeDofs))
     arcLengthNorm[1:2:end] .= 1
 

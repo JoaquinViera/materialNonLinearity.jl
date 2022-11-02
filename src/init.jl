@@ -23,7 +23,7 @@ end
 function IsotropicBiLinear(; E::Real, σY0::Real, K::Real)
     IsotropicBiLinear(E, σY0, K)
 end
-
+struct UserModel <: MaterialModel end
 # ============================================================================
 # Section
 # ============================================================================
@@ -72,17 +72,6 @@ end
 # ============================================================================
 
 abstract type AbstractAlgorithm end
-
-# ============================================================================
-# Analysis settings
-# ============================================================================
-
-struct AnalysisSettings
-    tolk::Float64
-    tolu::Float64
-    tolf::Float64
-    loadFactors::Vector{Float64}
-end
 
 # ============================================================================
 # Plots settings
