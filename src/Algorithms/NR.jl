@@ -6,6 +6,11 @@ struct NewtonRaphson <: AbstractAlgorithm
     tolu::Float64
     tolf::Float64
     loadFactors::Vector{Float64}
+    nTimes::Int64
+    function NewtonRaphson(tolk, tolu, tolf, loadFactors)
+        nTimes = length(loadFactors)
+        return new(tolk, tolu, tolf, loadFactors, nTimes)
+    end
 end
 
 function step!(alg::NewtonRaphson, Uk, ModelSol, KTk, Fintk, time, nothing...)

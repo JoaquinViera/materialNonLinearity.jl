@@ -76,11 +76,15 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 tolk = 50 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-nLoadSteps = 100 # Number of load increments
-loadFactorsVec = ones(nLoadSteps) # Load scaling factors
+nLoadSteps = 200 # Number of load increments
+initialDeltaLambda = 1e-2 #
+arcLengthIncrem = 5e-4 #
+controlDofs = [10] #
+scalingProjection = 1 #
+# loadFactorsVec = ones(nLoadSteps) # Load scaling factors
 
 # Numerical method settings struct
-StrAnalysisSettings = ArcLength(tolk, tolu, tolf, loadFactorsVec)
+StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
 
 # Plot parameters
 # =======================================

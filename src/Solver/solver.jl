@@ -9,7 +9,12 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
     # Counters
     time = 1
     nTimes = IterData.nTimes
-    λₖ = AnalysisSettings.loadFactors[time]
+
+    if isa(typeof(AnalysisSettings), Type{ArcLength})
+        λₖ = AnalysisSettings.initialDeltaLambda
+    elseif isa(typeof(AnalysisSettings), Type{NewtonRaphson})
+        λₖ = AnalysisSettings.loadFactors[time]
+    end
 
     # Progress print
     progressFrame = round((nTimes - 1) / 5)
@@ -33,6 +38,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
         # increment external force
         if time > 1
             λₖ = ModelSol.loadFactors[time]
+            #println(λₖ)
         end
         ModelSol.Fextk = ModelSol.Fextk + λₖ * varFext
         ModelSol.matFext = hcat(ModelSol.matFext, ModelSol.Fextk)

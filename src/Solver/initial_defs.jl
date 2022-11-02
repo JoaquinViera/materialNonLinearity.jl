@@ -26,7 +26,7 @@ function initial_defs(Mesh, BoundaryConds, AnalysisSettings)
     matFint = vcat(Fintk, []) # Matrix to store interal forces 
 
     # Iteration parameters
-    nTimes = length(AnalysisSettings.loadFactors)
+    nTimes = AnalysisSettings.nTimes
     stopCrit = []
 
     # Supports
@@ -55,7 +55,3 @@ function initial_defs(Mesh, BoundaryConds, AnalysisSettings)
 
     return ModelStore, IterData, varFext
 end
-
-
-
-

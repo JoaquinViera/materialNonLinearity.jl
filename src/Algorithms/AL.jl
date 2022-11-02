@@ -5,7 +5,11 @@ struct ArcLength <: AbstractAlgorithm
     tolk::Float64
     tolu::Float64
     tolf::Float64
-    loadFactors::Vector{Float64}
+    nTimes::Float64
+    initialDeltaLambda::Float64
+    arcLengthIncrem::Float64
+    controlDofs::Vector{Int64}
+    scalingProjection::Float64
 end
 
 function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, dispIter, varFext, currδu, convδu)
@@ -24,36 +28,31 @@ function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, dispIter, var
     δu⃰ = deltas[:, 1]
     δū = deltas[:, 2]
 
-    incremArcLen = 1e-3
+    incremArcLen = alg.arcLengthIncrem
+    initialDeltaLambda = alg.initialDeltaLambda
+    controlDofs = alg.controlDofs
+    scalingProjection = alg.scalingProjection
 
-    initialDeltaLambda = 1e-2
+    #incremArcLen = 1e-3
+    #initialDeltaLambda = 1e-2
     arcLengthNorm = zeros(length(freeDofs))
     arcLengthNorm[1:2:end] .= 1
 
-    #if length(analysisSettings.incremArcLen) > 1
     if length(incremArcLen) > 1
-        #Δl = (analysisSettings.incremArcLen)[time]
         Δl = incremArcLen[time]
     else
-        #Δl = analysisSettings.incremArcLen
         Δl = incremArcLen
     end
 
     if dispIter == 1 # Predictor
         if norm(Uₖ) == 0
-            #δλ = analysisSettings.initialDeltaLambda
             δλ = initialDeltaLambda
         else
             δλ = sign((convδu' * (arcLengthNorm .* δū))) * Δl / sqrt(δū' * (arcLengthNorm .* δū))
         end
     else # Jirasek method
-        #controlDofs = freeDofs[end-1]
-        controlDofs = 10
-        scalingProjection = 1
-        # controlDofs = analysisSettings.controlDofs # ajustar esto luego
-        #scalingProjection = analysisSettings.sign
         c = zeros(length(Uₖ))
-        c[controlDofs] = scalingProjection
+        c[controlDofs] .= scalingProjection
         c = c[freeDofs]
         δλ = (Δl - c' * currδu - c' * δu⃰) / (c' * δū)
     end
