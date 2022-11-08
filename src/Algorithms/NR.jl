@@ -13,7 +13,7 @@ struct NewtonRaphson <: AbstractAlgorithm
     end
 end
 
-function step!(alg::NewtonRaphson, Uk, ModelSol, KTk, Fintk, time, nothing...)
+function step!(alg::NewtonRaphson, Uk, ModelSol, KTk, Fintk, time, args...)
 
     Fextk = ModelSol.Fextk
     freeDofs = ModelSol.freeDofs

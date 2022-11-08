@@ -2,6 +2,9 @@
 # Calls numerical method 
 # =============================================
 
+initial_lambda(a::ArcLength) = a.initialDeltaLambda
+initial_lambda(a::NewtonRaphson) = first(a.loadFactors)
+
 function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
     # Initialize required variables
     ModelSol, IterData, varFext = initial_defs(Mesh, BoundaryConds, AnalysisSettings)
@@ -10,11 +13,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
     time = 1
     nTimes = IterData.nTimes
 
-    if isa(typeof(AnalysisSettings), Type{ArcLength})
-        λₖ = AnalysisSettings.initialDeltaLambda
-    elseif isa(typeof(AnalysisSettings), Type{NewtonRaphson})
-        λₖ = AnalysisSettings.loadFactors[time]
-    end
+    λₖ = initial_lambda(AnalysisSettings)
 
     # Progress print
     progressFrame = round((nTimes - 1) / 5)
@@ -31,7 +30,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
             counter = counter + 1
         end
         # Sets current disp Vector
-        Uₖ = ModelSol.matUk[:, time]
+        Uₖ = ModelSol.matUk[time] # ModelSol.matUk[:, time]
         convδu = ModelSol.convδu[:, time]
         currδu = zeros(length(ModelSol.freeDofs))
 

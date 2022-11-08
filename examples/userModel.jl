@@ -17,6 +17,65 @@ K = -E / 100
 # Materials struct
 StrMaterialModels = UserModel()
 
+import materialNonLinearity: constitutive_model
+
+# Defines the constitutive model for `UserModel`.
+function constitutive_model(ElemMaterialModel::UserModel, εₖ)
+    fck = 30 # MPa
+    E = 28e6 # kN/m2
+    fctmfl = 3e3 # kN/m2
+    yc = 1.5
+    fcd = fck / yc
+
+    # Tension
+    eps1 = fctmfl / E
+    K = -E / 10
+
+    # Compression
+    if fck <= 50
+        epsc0 = 2e-3
+        epscu = 3.5e-3
+        n = 2
+    else
+        epsc0 = 2e-3 + 0.000085 * (fck - 50)^(0.50)
+        epscu = 0.0026 + 0.0144 * ((100 - fck) / 100)^4
+        n = 1.4 + 9.6 * ((100 - fck) / 100)^4
+    end
+
+    if εₖ >= 0
+        # Tension
+        if εₖ <= eps1
+            σ = E * εₖ
+            ∂σ∂ε = E
+        else
+            if εₖ >= eps1 * (1 - E / K)
+                σ = 0
+                ∂σ∂ε = 0
+            else
+                σ = fctmfl + K * (εₖ - eps1)
+                ∂σ∂ε = K
+            end
+        end
+        #Compression
+    else
+        epsc = abs(εₖ)
+
+        if epsc <= epsc0
+            σ = -fcd * (1 - (1 - epsc / epsc0) .^ n) * 1000
+            ∂σ∂ε = fcd * n * (1 - epsc / epsc0) .^ (n - 1) / epsc0 * 1000
+        else
+            σ = -fcd * 1000
+            ∂σ∂ε = 0
+        end
+
+        #σ = E * εₖ
+        #∂σ∂ε = E
+    end
+
+    return σ, ∂σ∂ε
+
+end
+
 # Define section
 # =======================================
 b = 0.3
@@ -72,7 +131,7 @@ tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
 nLoadSteps = 40 # Number of load increments
 initialDeltaLambda = 1e-5 #
-arcLengthIncrem = 1e-5 #
+arcLengthIncrem = [1e-5] #
 controlDofs = [10] #
 scalingProjection = 1 #
 

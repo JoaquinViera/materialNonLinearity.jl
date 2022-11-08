@@ -39,7 +39,7 @@ function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, dispIter, var
     if length(incremArcLen) > 1
         Δl = incremArcLen[time]
     else
-        Δl = incremArcLen
+        Δl = incremArcLen[1]
     end
 
     if dispIter == 1 # Predictor
