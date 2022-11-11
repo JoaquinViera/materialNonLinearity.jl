@@ -31,9 +31,9 @@ StrSections = Rectangle(; b, h)
 # Nodes
 L = 1
 nnodes = 21
-#xcoords = collect(LinRange(0, L, nnodes))
-t = 0:1/(nnodes-1):1
-xcoords = t .^ 1.5 * L
+xcoords = collect(LinRange(0, L, nnodes))
+#t = 0:1/(nnodes-1):1
+#xcoords = t .^ 1.5 * L
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
 
@@ -74,8 +74,10 @@ tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
 
 initialDeltaLambda = 1e-2 #
-arcLengthIncrem = vcat(ones(65) * 8e-5, ones(70) * 9e-6) #
+arcLengthIncrem = vcat(ones(40) * 1e-3, ones(5) * 1e-4) #
+#arcLengthIncrem = [1e-4] #
 nLoadSteps = length(arcLengthIncrem) # Number of load increments
+#nLoadSteps = 1 # Number of load increments
 controlDofs = [10] #
 scalingProjection = 1 #
 

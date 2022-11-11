@@ -8,6 +8,7 @@ struct ArcLength <: AbstractAlgorithm
     nTimes::Float64
     initialDeltaLambda::Float64
     arcLengthIncrem::Vector{Float64}
+    #arcLengthIncrem::Float64
     controlDofs::Vector{Int64}
     scalingProjection::Float64
 end
@@ -39,7 +40,7 @@ function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, dispIter, var
     if length(incremArcLen) > 1
         Δl = incremArcLen[time]
     else
-        Δl = incremArcLen
+        Δl = incremArcLen[1]
     end
 
     if dispIter == 1 # Predictor

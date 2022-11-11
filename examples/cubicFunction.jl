@@ -6,70 +6,35 @@
 using materialNonLinearity, Plots, LinearAlgebra
 
 # example name
-problemName = "CantileverEPP"
+problemName = "cubicFunction"
 
 # Define material model
 # =======================================
-E = 28e6
-σY = 3e3
-K = -E / 100
+E = 210e6
+σY = 250e3
 
 import materialNonLinearity: constitutive_model
+
 
 # Materials struct
 StrMaterialModels = UserModel()
 
-
 function constitutive_model(ElemMaterialModel::UserModel, εₖ)
-    fck = 30 # MPa
-    E = 28e6 # kN/m2
-    fctmfl = 3e3 # kN/m2
-    yc = 1.5
-    fcd = fck / yc
 
-    # Tension
-    eps1 = fctmfl / E
-    K = -E / 100
+    E = 210e6
+    sigmaY = 250e3
+    epsY = sigmaY / E
 
-    # Compression
-    if fck <= 50
-        epsc0 = 2e-3
-        epscu = 3.5e-3
-        n = 2
+    a = -sigmaY / (2 * epsY^3)
+    b = 3 * sigmaY / (2 * epsY)
+
+
+    if abs(εₖ) >= sqrt(-b / a)
+        σ = 0
+        ∂σ∂ε = 0
     else
-        epsc0 = 2e-3 + 0.000085 * (fck - 50)^(0.50)
-        epscu = 0.0026 + 0.0144 * ((100 - fck) / 100)^4
-        n = 1.4 + 9.6 * ((100 - fck) / 100)^4
-    end
-
-    if εₖ >= 0
-        # Tension
-        if εₖ <= eps1
-            σ = E * εₖ
-            ∂σ∂ε = E
-        else
-            if εₖ >= eps1 * (1 - E / K)
-                σ = 0
-                ∂σ∂ε = 0
-            else
-                σ = fctmfl + K * (εₖ - eps1)
-                ∂σ∂ε = K
-            end
-        end
-        #Compression
-    else
-        epsc = abs(εₖ)
-        #=
-                if epsc <= epsc0
-                    σ = -fcd * (1 - (1 - epsc / epsc0) .^ n) * 1000
-                    ∂σ∂ε = fcd * n * (1 - epsc / epsc0) .^ (n - 1) / epsc0 * 1000
-                else
-                    σ = -fcd * 1000
-                    ∂σ∂ε = 0
-                end
-        =#
-        σ = E * εₖ
-        ∂σ∂ε = E
+        σ = a * εₖ^3 + b * εₖ
+        ∂σ∂ε = 3 * a * εₖ^2 + b
     end
 
     return σ, ∂σ∂ε
@@ -79,8 +44,8 @@ end
 
 # Define section
 # =======================================
-b = 0.3
-h = 0.3
+b = 0.1
+h = 0.1
 
 # Section struct
 StrSections = Rectangle(; b, h)
@@ -116,7 +81,7 @@ StrMesh = Mesh(Nodes, Conec)
 supps = [1 Inf Inf]
 
 # Define applied external loads
-Fy = -0.1
+Fy = -1
 Mz = 0
 nod = nnodes
 nodalForces = [nod Fy Mz]
@@ -130,10 +95,11 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 tolk = 50 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-nLoadSteps = 120 # Number of load increments
-initialDeltaLambda = 1e-5 #
-arcLengthIncrem = [1e-5] #
-controlDofs = [10] #
+initialDeltaLambda = 1e-3 #
+#arcLengthIncrem = vcat(ones(30) * 1e-4, ones(5) * 5e-5, ones(15) * 1e-5) #
+arcLengthIncrem = vcat(ones(40) * 4e-4, ones(1) * 1e-5) #
+nLoadSteps = length(arcLengthIncrem) # Number of load increments
+controlDofs = [10, 16, 24] #
 scalingProjection = 1 #
 
 # Numerical method settings struct
@@ -173,6 +139,7 @@ dofT = nnodes * 2
 # Reaction Bending moment 
 mVec = matFint[dofM, :]
 
+tVec = abs.(matUk[dofT, :])
 dVec = abs.(matUk[dofD, :])
 pVec = abs.(mVec / L)
 
@@ -199,21 +166,14 @@ end
 # --------------------------------
 
 Mana = zeros(nLoadSteps)
-C = K
 epsY = σY / E
-kappae = 2 * σY / (E * h)
-#eps_ast = epsY - σY / C
-#kappa_ast = 2 * eps_ast / h
+ca = -σY / (2 * epsY^3);
+cb = 3 * σY / (2 * epsY);
+
 elem = 1
 for i in 1:nLoadSteps
     kappak = kappaHistElem[elem, i]
-    if kappak <= kappae
-        Mana[i] = E * StrSections.Iy * kappak
-    else
-        Msup = E * StrSections.Iy * kappak / 2
-        Minf = σY * b * h^2 / 24 * (3 - kappae^2 / kappak^2) + σY * K * b * h^2 * kappak / kappae / (12 * E) * (1 - 3 / 2 * kappae / kappak + (kappae / kappak)^3 / 2)
-        Mana[i] = Msup + Minf
-    end
+    Mana[i] = kappak * b * (ca * kappak^2 * h^5 / 80 + cb * h^3 / 12)
 end
 
 err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
@@ -223,16 +183,20 @@ println(maxErrMk)
 # M-κ plot  
 # --------------------------------
 elem = 1
-fig = plot(kappaHistElem[elem, :], abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1)
+fig = plot(kappaHistElem[elem, :], abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 plot!(fig, kappaHistElem[elem, :], Mana, markershape=:rect, lw=lw, ms=ms, label="Analytic")
 xlabel!("κ")
 ylabel!("M")
 
 # P-δ plot  
 # --------------------------------
-figPdelta = plot(dVec, pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1)
+figPdelta = plot(dVec, pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 xlabel!("δ")
 ylabel!("P")
 
+figPdelta2 = plot(dVec[end-15:end], pVec[end-15:end], markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+xlabel!("δ")
+ylabel!("P")
 
-
+#plotlyjs()
+fig3 = plot3d(dVec, tVec, pVec, markershape=:circle, lw=lw, ms=ms, title="(δ,θ,P)", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
