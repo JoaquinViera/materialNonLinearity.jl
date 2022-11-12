@@ -74,7 +74,7 @@ tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
 
 initialDeltaLambda = 1e-2 #
-arcLengthIncrem = vcat(ones(40) * 1e-3, ones(5) * 1e-4) #
+arcLengthIncrem = vcat(ones(120) * 1e-4, ones(5) * 1e-4) #
 #arcLengthIncrem = [1e-4] #
 nLoadSteps = length(arcLengthIncrem) # Number of load increments
 #nLoadSteps = 1 # Number of load increments
@@ -126,9 +126,9 @@ mVec = matFint[dofM, :]
 Mnum = mVec[2]
 
 # Displacements at loaded node
-deltaNum = matUk[dofD, 2]
-thetaNum = matUk[dofT, 2]
-
+#deltaNum = matUk[dofD, 2]
+#thetaNum = matUk[dofT, 2]
+#=
 dVec = abs.(matUk[dofD, :])
 factors = sol.loadFactors
 factors[2] = initialDeltaLambda
@@ -138,7 +138,7 @@ pVec[2] = P * initialDeltaLambda
 for i in 2:(length(factors))
     pVec[i] = factors[i] + pVec[i-1]
 end
-
+=#
 # Compute curvatures
 # --------------------------------
 
@@ -150,13 +150,18 @@ rotXYXZ[4, 4] = -1
 
 for j in 1:nelems
     nodeselem = StrMesh.conecMat[j, 3]
-    elemdofs = nodes2dofs(nodeselem[:], 2)
+    local elemdofs = nodes2dofs(nodeselem[:], 2)
     local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 2)
-    UkeL = R' * matUk[elemdofs, 1:end]
     Be = intern_function(0, l) * rotXYXZ
-    kappaelem = Be * UkeL
-    kappaHistElem[j, :] = abs.(kappaelem)
+    for i in 1:nLoadSteps
+        #elemdofs
+        UkeL = R' * matUk[i][elemdofs]
+        kappaelem = Be * UkeL
+
+        kappaHistElem[j, i] = abs.(kappaelem[1])
+    end
 end
+
 
 # Analytical solution M-κ
 # --------------------------------
@@ -196,7 +201,7 @@ savefig(fig, "ejemplo3M-k.png")
 
 err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
 maxErrMk = maximum(err)
-
+#=
 # convergence analysis
 κₚ = 0.4 # 1/m
 δκ = 4e-2
@@ -223,7 +228,7 @@ println(kappa_i)
 println(M_i)
 println(M_a)
 println(err)
-
+=#
 # P-δ plot  
 # --------------------------------
 figPdelta = plot(dVec, pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1)

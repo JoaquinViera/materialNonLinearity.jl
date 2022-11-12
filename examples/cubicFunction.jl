@@ -139,8 +139,8 @@ dofT = nnodes * 2
 # Reaction Bending moment 
 mVec = matFint[dofM, :]
 
-tVec = abs.(matUk[dofT, :])
-dVec = abs.(matUk[dofD, :])
+#tVec = abs.(matUk[dofT, :])
+#dVec = abs.(matUk[dofD, :])
 pVec = abs.(mVec / L)
 
 # Compute curvatures
@@ -154,12 +154,16 @@ rotXYXZ[4, 4] = -1
 
 for j in 1:nelems
     nodeselem = StrMesh.conecMat[j, 3]
-    elemdofs = nodes2dofs(nodeselem[:], 2)
+    local elemdofs = nodes2dofs(nodeselem[:], 2)
     local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 2)
-    UkeL = R' * matUk[elemdofs, 1:end]
     Be = intern_function(0, l) * rotXYXZ
-    kappaelem = Be * UkeL
-    kappaHistElem[j, :] = abs.(kappaelem)
+    for i in 1:nLoadSteps
+        #elemdofs
+        UkeL = R' * matUk[i][elemdofs]
+        kappaelem = Be * UkeL
+
+        kappaHistElem[j, i] = abs.(kappaelem[1])
+    end
 end
 
 # Analytical solution M-κ

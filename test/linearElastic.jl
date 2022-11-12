@@ -68,7 +68,7 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 tolk = 50 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-nLoadSteps = 2 # Number of load increments
+nLoadSteps = 3 # Number of load increments
 loadFactorsVec = ones(nLoadSteps) # Load scaling factors
 
 # Numerical method settings struct
@@ -112,8 +112,9 @@ dofT = nnodes * 2
 mVec = matFint[dofM, :]
 
 Mnum = mVec[2]
-δNum = matUk[dofD, 2]
-θNum = matUk[dofT, 2]
+#δNum = matUk[dofD, 2]
+δNum = matUk[2][dofD]
+θNum = matUk[2][dofT]
 
 @test abs(Mnum - Man) <= tolf
 @test abs(δNum - δan) <= tolu

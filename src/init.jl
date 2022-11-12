@@ -89,14 +89,15 @@ end
 
 mutable struct ModelSol
     Uk::Vector{Float64}
-    convδu::Array{Float64}
+    convδu::Vector{Vector{Float64}}
     Fextk::Vector{Float64}
     Fintk::Vector{Float64}
-    matUk::Array{Float64}
+    matUk::Vector{Vector{Float64}}
+    #matUk::Array{Float64}
     matFext::Array{Float64}
     matFint::Array{Float64}
     freeDofs::Vector{Int64}
-    loadFactors::Array{Float64}
+    loadFactors::Vector{Float64}
 end
 
 # ============================================================================

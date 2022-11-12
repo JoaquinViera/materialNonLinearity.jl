@@ -16,8 +16,8 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
     h = secParams[2]
 
     # Gauss points
-    ne = 10
-    ns = 10
+    ne = 16
+    ns = 16
     xge, we = gausslegendre(ne)
     xgs, ws = gausslegendre(ns)
 
@@ -29,7 +29,7 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
         secFinte = 0
         secKTe = 0
 
-        pge = pgeVec[j]
+        pge = view(pgeVec, j)[1]
 
         # Bending inter functions second derivative
         B = intern_function(pge, l) * rotXYXZ
@@ -38,8 +38,8 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
         εₖVec = -pgsVec * B * Uke
 
         for m in 1:length(ws)
-            pgs = pgsVec[m]
-            εₖ = εₖVec[m]
+            pgs = view(pgsVec, m)[1]
+            εₖ = view(εₖVec, m)[1]
 
             σ, ∂σ∂ε = constitutive_model(ElemMaterialModel, εₖ)
             secFinte = h / 2 * (b * (-B') * pgs * σ * ws[m]) .+ secFinte

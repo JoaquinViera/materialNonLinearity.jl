@@ -9,10 +9,14 @@ function assembler(Section, MaterialModel, Mesh, Uₖ, intBool)
     FintₖL = zeros(nnodes * ndofs)
     Fintₖ = zeros(nnodes * ndofs, 1)
 
+    nodes = view(Mesh.conecMat, (nelems*2+1):(nelems*3))
+
     for i in 1:nelems
         # Elem nodes, dofs, Material and geometry
-        nodeselem = Mesh.conecMat[i, 3]
-        elemdofs = nodes2dofs(nodeselem[:], ndofs)
+
+        nodeselem = nodes[i]
+        elemdofs = nodes2dofs(nodeselem, ndofs)
+
         R, l = element_geometry(Mesh.nodesMat[nodeselem[1], :], Mesh.nodesMat[nodeselem[2], :], ndofs)
         ElemSecParams = [Section.b Section.h]
         ElemMaterial = MaterialModel

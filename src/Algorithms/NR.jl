@@ -13,26 +13,33 @@ struct NewtonRaphson <: AbstractAlgorithm
     end
 end
 
-function step!(alg::NewtonRaphson, Uk, ModelSol, KTk, Fintk, time, nothing...)
+function step!(alg::NewtonRaphson, Uk, ModelSol, KTk, Fintk, time, U, args...)
 
     Fextk = ModelSol.Fextk
     freeDofs = ModelSol.freeDofs
 
     # Solve system
-    KTkred = KTk[freeDofs, freeDofs]
-    Fext_red = Fextk[freeDofs]
-    Fint_red = Fintk[freeDofs]
+    KTkred = view(KTk, freeDofs, freeDofs)
+    Fext_red = view(Fextk, freeDofs)
+    Fint_red = view(Fintk, freeDofs)
 
-    r = Fext_red - Fint_red
-
-    δUk = KTkred \ r
+    δUk = KTkred \ (Fext_red - Fint_red)
 
     # Computes Uk
-    Uk[freeDofs] = Uk[freeDofs] + δUk
+
+    #Uk[freeDofs] = Uk[freeDofs] + δUk
+    Uk_red = view(Uk, freeDofs) + δUk
+    U[freeDofs] = Uk_red
 
     # Computes load factor
-    λₖ = alg.loadFactors[time]
+    λₖ = view(alg.loadFactors, time)[1]
 
-    return Uk, δUk, λₖ, nothing
+    return copy(U), δUk, λₖ, nothing
 
+end
+
+function sets!(alg::NewtonRaphson, nnodes, ndofs, args...)
+    λₖ = alg.loadFactors[1]
+    U = zeros(nnodes * ndofs)
+    return λₖ, U, nothing
 end

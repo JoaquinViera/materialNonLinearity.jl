@@ -2,19 +2,15 @@
 # Calls numerical method 
 # =============================================
 
+
+
 function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
     # Initialize required variables
-    ModelSol, IterData, varFext = initial_defs(Mesh, BoundaryConds, AnalysisSettings)
+    ModelSol, IterData, varFext, λₖ, U, c = initial_defs(Mesh, BoundaryConds, AnalysisSettings)
 
     # Counters
     time = 1
     nTimes = IterData.nTimes
-
-    if isa(typeof(AnalysisSettings), Type{ArcLength})
-        λₖ = AnalysisSettings.initialDeltaLambda
-    elseif isa(typeof(AnalysisSettings), Type{NewtonRaphson})
-        λₖ = AnalysisSettings.loadFactors[time]
-    end
 
     # Progress print
     progressFrame = round((nTimes - 1) / 5)
@@ -23,23 +19,26 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
     else
         counter = 0
     end
-
+    #println(ModelSol.matUk)
     while nTimes > time
+        #println(time)
 
         if time == counter * progressFrame + 1
             println("$(counter * 20) %")
             counter = counter + 1
         end
         # Sets current disp Vector
-        Uₖ = ModelSol.matUk[:, time]
-        convδu = ModelSol.convδu[:, time]
+        #Uₖ = ModelSol.matUk[:, time]
+        Uₖ = ModelSol.matUk[time]
+
+        convδu = ModelSol.convδu[time]
+        #convδu = view(ModelSol.convδu, time)[1]
+
         currδu = zeros(length(ModelSol.freeDofs))
 
         # increment external force
-        if time > 1
-            λₖ = ModelSol.loadFactors[time]
-            #println(λₖ)
-        end
+        time > 1 ? view(ModelSol.loadFactors, time)[1] : nothing
+
         ModelSol.Fextk = ModelSol.Fextk + λₖ * varFext
         ModelSol.matFext = hcat(ModelSol.matFext, ModelSol.Fextk)
 
@@ -49,26 +48,34 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
 
         while convIter == 0
             # Computes Tangent Stiffness Matrix KTₖ & Internal Forces
-            intBool = 1 # Boolean to control computations of variables
-            Fintₖ, KTₖ = assembler(Section, MaterialModel, Mesh, Uₖ, intBool)
+            # intBool = 1 # Boolean to control computations of variables
+            Fintₖ, KTₖ = assembler(Section, MaterialModel, Mesh, Uₖ, 1)
 
             # Computes Uₖ & δUₖ
-            Uₖ, δUₖ, λₖ, currδu = step!(AnalysisSettings, Uₖ, ModelSol, KTₖ, Fintₖ, time, dispIter, varFext, currδu, convδu)
-
+            Uₖ, δUₖ, λₖ, currδu = step!(AnalysisSettings, Uₖ, ModelSol, KTₖ, Fintₖ, time, U, dispIter, varFext, currδu, convδu, c)
             # Computes Fintₖ at computed Uₖ
-            intBool = 1
-            Fintₖ, KTₖ = assembler(Section, MaterialModel, Mesh, Uₖ, intBool)
+            #intBool = 1
+            Fintₖ, KTₖ = assembler(Section, MaterialModel, Mesh, Uₖ, 1)
 
             # Check convergence
-            cond, convIter = convergence_check(ModelSol.freeDofs, Uₖ, δUₖ, ModelSol.Fextk, Fintₖ, AnalysisSettings, dispIter, time)
+            cond, convIter = convergence_check(Uₖ[ModelSol.freeDofs], δUₖ, ModelSol.Fextk[ModelSol.freeDofs], Fintₖ[ModelSol.freeDofs], AnalysisSettings, dispIter, time)
 
             # Stores results if convergence
             if convIter == 1
+                #rintln(ModelSol.matUk)
                 neigs = sum(eigvals(KTₖ[ModelSol.freeDofs, ModelSol.freeDofs]) .< 0)
                 #println("number of negative eigs $neigs")
-                ModelSol.loadFactors = hcat(ModelSol.loadFactors, λₖ)
-                ModelSol.convδu = hcat(ModelSol.convδu, δUₖ)
-                ModelSol.matUk = hcat(ModelSol.matUk, Uₖ)
+                push!(ModelSol.loadFactors, λₖ)
+                #ModelSol.convδu = hcat(ModelSol.convδu, δUₖ)
+                #println(δUₖ)
+                push!(ModelSol.convδu, δUₖ)
+                #ModelSol.matUk = hcat(ModelSol.matUk, Uₖ)
+                #println(Uₖ)
+                #println(ModelSol.matUk)
+                #println(ModelSol.matUk[time])
+                #push!(ModelSol.matUk, Uₖ)
+                #println(ModelSol.matUk[time])
+                ModelSol.matUk[time+1] = Uₖ
                 ModelSol.matFint = hcat(ModelSol.matFint, Fintₖ)
                 IterData.stopCrit = vcat(IterData.stopCrit, cond)
             end
