@@ -1,6 +1,24 @@
 # isotropic Bilinear
 
-using LinearAlgebra, BenchmarkTools
+# using LinearAlgebra, BenchmarkTools
+
+#using ProgressMeter
+#=
+p = Progress(10000, dt=0.25, barglyphs=BarGlyphs("[=> ]"), barlen=50, color=:cyan)
+
+i = 1
+function prueba(i)
+
+    while i <= 10000
+        ones(300) * ones(300)'
+        next!(p)
+        i = i + 1
+        #println(i)
+    end
+
+end
+=#
+#=
 
 function prueba1(t)
     Uk = zeros(t)
@@ -54,7 +72,7 @@ t = 100
 @btime prueba3(t)
 @btime prueba4(t)
 
-
+=#
 
 # without mods
 #Memory estimate: 756.18 MiB, allocs estimate: 17773651.
@@ -107,4 +125,49 @@ t = 100
  13.463 s (163685017 allocations: 6.34 GiB)
  13.596 s (163686586 allocations: 6.34 GiB)
  14.700 s (163685017 allocations: 6.34 GiB)
+
+ 13.386 s (163690226 allocations: 6.34 GiB)
+ 14.605 s (163690321 allocations: 6.34 GiB)
+ 12.528 s (138196722 allocations: 5.82 GiB)
+ 12.518 s (138196599 allocations: 5.82 GiB)
+ 12.068 s (138196474 allocations: 5.82 GiB)
+ 14.046 s (138196296 allocations: 5.82 GiB)
+ 12.447 s (138028744 allocations: 5.81 GiB)
+ 12.789 s (138070584 allocations: 5.81 GiB)
+ 12.861 s (138028791 allocations: 5.81 GiB)
+ 13.007 s (138028743 allocations: 5.81 GiB)
+ 12.314 s (138027697 allocations: 5.81 GiB)
  =#
+
+ #=
+using BenchmarkTools
+
+function nodes2dofs(nodes, ndofs)
+
+    n = length(nodes)
+    gdl = zeros(Int64, n * ndofs)
+    vec = Vector(1:ndofs)
+    for i in 1:n
+        gdl[(i-1)*ndofs.+vec] = (nodes[i] - 1) * ndofs .+ vec
+    end
+    return gdl
+end
+
+@btime nodes2dofs([1, 2], 6)
+
+
+function nodes2dofs2(nodes, degreespernode)
+    n = length(nodes)
+    dofs = Vector{Int64}(undef, n * degreespernode)
+    for i = 1:n
+        for j = 1:degreespernode
+            @inbounds dofs[(i-1)*degreespernode+j] = degreespernode * (nodes[i] - 1) + j
+        end
+    end
+    return dofs
+end
+
+
+@btime nodes2dofs([1, 2], 6)
+
+=#

@@ -32,6 +32,8 @@ include("Solver/finte_KT_int.jl")
 include("Solver/assembler.jl")
 # Material models
 include("Solver/constitutive_model.jl")
+# Store solution
+include("Solver/store_sol.jl")
 
 # Numerical methods - algorithms
 # -----------------------------------------------

@@ -4,12 +4,16 @@
 
 function initial_defs(Mesh, BoundaryConds, AnalysisSettings)
 
+    println(" \n==================================================")
+    println("Starting analysis.")
+    println("================================================== \n")
+
     ndofs = 2 # degrees of freedom per node
     nnodes = size(Mesh.nodesMat, 1)
 
     # Iteration parameters
     nTimes = AnalysisSettings.nTimes
-    stopCrit = []
+    stopCrit = Vector{Int64}(undef, nTimes)
 
     # varFext
     varFext = zeros(ndofs * nnodes)
@@ -25,11 +29,12 @@ function initial_defs(Mesh, BoundaryConds, AnalysisSettings)
     Fextk = zeros(ndofs * nnodes)
     Fintk = zeros(ndofs * nnodes)
 
-    #matUₖ = vcat(Uₖ, []) # Matrix to store disps
     matUₖ = Vector{Vector{Float64}}(undef, nTimes) # Matrix to store disps
     matUₖ[1] = Uₖ
 
-    matFext = vcat(Fextk, []) # Matrix to store applied external forces
+    #matFext = vcat(Fextk, []) # Matrix to store applied external forces
+    matFext = Vector{Vector{Float64}}(undef, nTimes) # Matrix to store applied external forces
+    matFext[1] = Fextk
     matFint = vcat(Fintk, []) # Matrix to store interal forces 
 
 
@@ -52,12 +57,12 @@ function initial_defs(Mesh, BoundaryConds, AnalysisSettings)
     deleteat!(free_dofs, fixed_dofs)
 
 
-    #δUₖ = zeros(length(free_dofs))
-    δUₖ = Vector{Vector{Float64}}()
-    push!(δUₖ, zeros(length(free_dofs)))
+    δUₖ = Vector{Vector{Float64}}(undef, nTimes)
+    δUₖ[1] = zeros(length(free_dofs))
 
-    loadFactors = Vector{Float64}()
-    push!(loadFactors, 0.0)
+
+    loadFactors = Vector{Float64}(undef, nTimes)
+    loadFactors[1] = 0.0
 
     λₖ, U, c = sets!(AnalysisSettings, nnodes, ndofs)
 

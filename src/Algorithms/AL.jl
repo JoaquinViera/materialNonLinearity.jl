@@ -26,15 +26,8 @@ function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, U, dispIter, 
     r = [Fext_red - Fint_red varFext]
     deltas = KTₖ_red \ r
 
-    #δu⃰ = deltas[:, 1]
     δu⃰ = view(deltas, :, 1)
-    #δū = deltas[:, 2]
     δū = view(deltas, :, 2)
-
-    #incremArcLen = alg.arcLengthIncrem
-    #initialDeltaLambda = alg.initialDeltaLambda
-    #controlDofs = alg.controlDofs
-    #scalingProjection = alg.scalingProjection
 
     arcLengthNorm = zeros(length(freeDofs))
     arcLengthNorm[1:2:end] .= 1
@@ -52,20 +45,15 @@ function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, U, dispIter, 
             δλ = sign((convδu' * (arcLengthNorm .* δū))) * Δl / sqrt(δū' * (arcLengthNorm .* δū))
         end
     else # Jirasek method
-        #c = zeros(length(Uₖ))
-        #c[controlDofs] .= scalingProjection
         c = view(c, freeDofs)
         δλ = (Δl - c' * currδu - c' * δu⃰) / (c' * δū)
     end
 
     δUₖ = δu⃰ + δλ * δū
 
-    #Uₖ[freeDofs] = Uₖ[freeDofs] + δUₖ
     currδu = δUₖ + currδu
 
-    #println(U)
     Uk_red = view(Uₖ, freeDofs) + δUₖ
-    #Uₖ = zeros(length(Uₖ))
     U[freeDofs] = Uk_red
 
     return copy(U), δUₖ, δλ, currδu

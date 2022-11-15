@@ -98,6 +98,10 @@ strPlots = PlotSettings(lw, ms, color)
 
 sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings)
 
+using BenchmarkTools
+
+@btime solver($StrSections, $StrMaterialModels, $StrMesh, $StrBoundaryConds, $StrAnalysisSettings)
+stop
 # Post process
 # --------------------------------
 P = abs(Fy)

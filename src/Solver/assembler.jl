@@ -6,7 +6,6 @@ function assembler(Section, MaterialModel, Mesh, Uₖ, intBool)
     nelems = size(Mesh.conecMat, 1)
 
     KTₖ = zeros(ndofs * nnodes, ndofs * nnodes)
-    FintₖL = zeros(nnodes * ndofs)
     Fintₖ = zeros(nnodes * ndofs, 1)
 
     nodes = view(Mesh.conecMat, (nelems*2+1):(nelems*3))
@@ -17,16 +16,16 @@ function assembler(Section, MaterialModel, Mesh, Uₖ, intBool)
         nodeselem = nodes[i]
         elemdofs = nodes2dofs(nodeselem, ndofs)
 
-        R, l = element_geometry(Mesh.nodesMat[nodeselem[1], :], Mesh.nodesMat[nodeselem[2], :], ndofs)
+        #R, l = element_geometry(Mesh.nodesMat[nodeselem[1], :], Mesh.nodesMat[nodeselem[2], :], ndofs)
+        R, l = element_geometry(view(Mesh.nodesMat, nodeselem[1], :), view(Mesh.nodesMat, nodeselem[2], :), ndofs)
         ElemSecParams = [Section.b Section.h]
         ElemMaterial = MaterialModel
 
         # Elem disps in local system
-        UₖeL = R' * Uₖ[elemdofs]
+        #UₖeL = R' * Uₖ[elemdofs]
+        UₖeL = R' * view(Uₖ, elemdofs)
 
         # Internal force & Tangent mat
-        #intBool = 1
-        #Finte, KTe = finte_KT_int(ElemMaterial, l, ElemSecParams, UₖeL, intBool)
         if intBool == 1
             Finte, KTe = finte_KT_int(ElemMaterial, l, ElemSecParams, UₖeL, intBool)
             # Assemble tangent stiffness matrix
@@ -36,7 +35,7 @@ function assembler(Section, MaterialModel, Mesh, Uₖ, intBool)
         end
 
         # Assemble internal force
-        FintₖL[elemdofs] = Finte
+        #FintₖL[elemdofs] = Finte
         Fintₖ[elemdofs] = Fintₖ[elemdofs] + R * Finte
 
     end

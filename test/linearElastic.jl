@@ -11,9 +11,11 @@ problemName = "linearElastic"
 # Define material model
 # =======================================
 E = 210e6
+ne = 2
+ns = 2
 
 # Materials struct
-StrMaterialModels = LinearElastic(E)
+StrMaterialModels = LinearElastic(E, ne, ns)
 
 # Define section
 # =======================================
@@ -54,10 +56,10 @@ StrMesh = Mesh(Nodes, Conec)
 supps = [1 Inf Inf]
 
 # Define applied external loads
-Fy = -1
-Mz = 0
+Fz = -1
+My = 0
 nod = nnodes
-nodalForces = [nod Fy Mz]
+nodalForces = [nod Fz My]
 
 # BoundaryConds struct
 StrBoundaryConds = BoundaryConds(supps, nodalForces)
@@ -72,7 +74,6 @@ nLoadSteps = 3 # Number of load increments
 loadFactorsVec = ones(nLoadSteps) # Load scaling factors
 
 # Numerical method settings struct
-#StrAnalysisSettings = AnalysisSettings(tolk, tolu, tolf, loadFactorsVec)
 StrAnalysisSettings = NewtonRaphson(tolk, tolu, tolf, loadFactorsVec)
 
 # ===============================================
@@ -94,7 +95,7 @@ Kana = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l;
 
 # Check First step
 # --------------------------------
-P = abs(Fy)
+P = abs(Fz)
 # Analytical solution
 Man = -P * L
 δan = -P * L^3 / (3 * E * Iy)
@@ -112,7 +113,6 @@ dofT = nnodes * 2
 mVec = matFint[dofM, :]
 
 Mnum = mVec[2]
-#δNum = matUk[dofD, 2]
 δNum = matUk[2][dofD]
 θNum = matUk[2][dofT]
 

@@ -1,3 +1,3 @@
 # Dependencies
 
-using LinearAlgebra, FastGaussQuadrature
+using LinearAlgebra, FastGaussQuadrature, ProgressMeter

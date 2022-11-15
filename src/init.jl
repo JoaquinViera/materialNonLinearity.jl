@@ -7,23 +7,37 @@
 abstract type MaterialModel end
 
 struct LinearElastic <: MaterialModel
-    E::Real
+    E::Float64
+    ne::Int64
+    ns::Int64
 end
 
-function LinearElastic(; E::Real)
-    LinearElastic(E)
+function LinearElastic(; E::Float64, ne::Int64, ns::Int64)
+    LinearElastic(E, ne, ns)
 end
 
 struct IsotropicBiLinear <: MaterialModel
-    E::Real
-    σY0::Real
-    K::Real
+    E::Float64
+    σY0::Float64
+    K::Float64
+    ne::Int64
+    ns::Int64
 end
 
-function IsotropicBiLinear(; E::Real, σY0::Real, K::Real)
-    IsotropicBiLinear(E, σY0, K)
+function IsotropicBiLinear(; E::Float64, σY0::Float64, K::Float64, ne::Int64, ns::Int64)
+    IsotropicBiLinear(E, σY0, K, ne, ns)
 end
-struct UserModel <: MaterialModel end
+
+struct UserModel <: MaterialModel
+    ne::Int64
+    ns::Int64
+end
+
+function UserModel(; ne::Int64, ns::Int64)
+    UserModel(ne, ns)
+end
+
+
 # ============================================================================
 # Section
 # ============================================================================
@@ -93,8 +107,7 @@ mutable struct ModelSol
     Fextk::Vector{Float64}
     Fintk::Vector{Float64}
     matUk::Vector{Vector{Float64}}
-    #matUk::Array{Float64}
-    matFext::Array{Float64}
+    matFext::Vector{Vector{Float64}}
     matFint::Array{Float64}
     freeDofs::Vector{Int64}
     loadFactors::Vector{Float64}
@@ -106,5 +119,5 @@ end
 
 mutable struct IterParams
     nTimes::Int64
-    stopCrit::Array{Int64}
+    stopCrit::Vector{Int64}
 end

@@ -16,8 +16,10 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
     h = secParams[2]
 
     # Gauss points
-    ne = 16
-    ns = 16
+    #ne = 16
+    #ns = 16
+    ne = ElemMaterialModel.ne
+    ns = ElemMaterialModel.ns
     xge, we = gausslegendre(ne)
     xgs, ws = gausslegendre(ns)
 

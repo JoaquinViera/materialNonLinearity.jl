@@ -19,22 +19,22 @@ function step!(alg::NewtonRaphson, Uk, ModelSol, KTk, Fintk, time, U, args...)
     freeDofs = ModelSol.freeDofs
 
     # Solve system
-    KTkred = view(KTk, freeDofs, freeDofs)
+    KTₖ_red = view(KTk, freeDofs, freeDofs)
     Fext_red = view(Fextk, freeDofs)
     Fint_red = view(Fintk, freeDofs)
 
-    δUk = KTkred \ (Fext_red - Fint_red)
+    δUₖ = KTₖ_red \ (Fext_red - Fint_red)
 
     # Computes Uk
 
-    #Uk[freeDofs] = Uk[freeDofs] + δUk
-    Uk_red = view(Uk, freeDofs) + δUk
+    #Uk[freeDofs] = Uk[freeDofs] + δUₖ
+    Uk_red = view(Uk, freeDofs) + δUₖ
     U[freeDofs] = Uk_red
 
     # Computes load factor
     λₖ = view(alg.loadFactors, time)[1]
 
-    return copy(U), δUk, λₖ, nothing
+    return copy(U), δUₖ, λₖ, nothing
 
 end
 
