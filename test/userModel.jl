@@ -3,7 +3,7 @@
 # ===============================================
 
 # Load solver module
-using materialNonLinearity, Plots, LinearAlgebra
+using materialNonLinearity, LinearAlgebra
 
 # example name
 problemName = "cubicFunction"
