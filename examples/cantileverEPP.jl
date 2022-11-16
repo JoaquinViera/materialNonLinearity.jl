@@ -96,12 +96,12 @@ strPlots = PlotSettings(lw, ms, color)
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings)
+sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
 
 using BenchmarkTools
 
-@btime solver($StrSections, $StrMaterialModels, $StrMesh, $StrBoundaryConds, $StrAnalysisSettings)
-stop
+@btime solver($StrSections, $StrMaterialModels, $StrMesh, $StrBoundaryConds, $StrAnalysisSettings, problemName)
+
 # Post process
 # --------------------------------
 P = abs(Fy)

@@ -80,7 +80,7 @@ StrAnalysisSettings = NewtonRaphson(tolk, tolu, tolf, loadFactorsVec)
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings)
+sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
 
 # Check KTe
 Iy = StrSections.Iy

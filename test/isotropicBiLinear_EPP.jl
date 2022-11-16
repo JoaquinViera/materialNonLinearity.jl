@@ -94,7 +94,7 @@ StrAnalysisSettings = NewtonRaphson(tolk, tolu, tolf, loadFactorsVec)
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings)
+sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
 
 # Auxiliar
 # --------------------------------
@@ -177,7 +177,7 @@ StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings)
+sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
 
 # Auxiliar
 # --------------------------------

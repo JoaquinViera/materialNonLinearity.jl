@@ -2,10 +2,11 @@
 # Definition of initial variables to run
 #
 
-function initial_defs(Mesh, BoundaryConds, AnalysisSettings)
+function initial_defs(Mesh, BoundaryConds, AnalysisSettings, name)
 
     println(" \n==================================================")
     println("Starting analysis.")
+    println("Running problem $name")
     println("================================================== \n")
 
     ndofs = 2 # degrees of freedom per node

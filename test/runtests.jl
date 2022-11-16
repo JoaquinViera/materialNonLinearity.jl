@@ -7,4 +7,4 @@ include("linearElastic.jl")
 include("isotropicBiLinear_EPP.jl")
 
 # User defined constitutive model
-include("UserModel.jl")
+include("userModel.jl")

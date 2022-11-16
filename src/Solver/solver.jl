@@ -4,10 +4,10 @@
 
 
 
-function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings)
+function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, problemName)
 
     # Initialize required variables
-    ModelSol, IterData, varFext, λₖ, U, c = initial_defs(Mesh, BoundaryConds, AnalysisSettings)
+    ModelSol, IterData, varFext, λₖ, U, c = initial_defs(Mesh, BoundaryConds, AnalysisSettings,problemName)
 
     # Counters
     time = 1
