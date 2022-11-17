@@ -81,10 +81,10 @@ StrMesh = Mesh(Nodes, Conec)
 supps = [1 Inf Inf]
 
 # Define applied external loads
-Fy = -1
-Mz = 0
+Fz = -1
+My = 0
 nod = nnodes
-nodalForces = [nod Fy Mz]
+nodalForces = [nod Fz My]
 
 # BoundaryConds struct
 StrBoundaryConds = BoundaryConds(supps, nodalForces)
@@ -121,7 +121,7 @@ sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundar
 
 # Post process
 # --------------------------------
-P = abs(Fy)
+P = abs(Fz)
 Iy = StrSections.Iy
 
 # Numerical solution
