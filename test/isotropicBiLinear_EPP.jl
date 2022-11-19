@@ -18,6 +18,7 @@ ns = 16
 
 # Materials struct
 StrMaterialModels = IsotropicBiLinear(E, σY0, K, ne, ns)
+#StrMaterialModels = LinearElastic(E, ne, ns)
 
 # Define section
 # =======================================
@@ -32,7 +33,7 @@ StrSections = Rectangle(; b, h)
 
 # Nodes
 L = 1
-nnodes = 31
+nnodes = 21
 xcoords = collect(LinRange(0, L, nnodes))
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
@@ -55,13 +56,14 @@ StrMesh = Mesh(Nodes, Conec)
 # =======================================
 
 # Define Supports
-supps = [1 Inf Inf]
+supps = [1 Inf Inf Inf]
 
 # Define applied external loads
+Fx = 0
 Fz = -1
 My = 0
 nod = nnodes
-nodalForces = [nod Fz My]
+nodalForces = [nod Fx Fz My]
 
 # BoundaryConds struct
 StrBoundaryConds = BoundaryConds(supps, nodalForces)
@@ -81,7 +83,7 @@ strPlots = PlotSettings(lw, ms, color)
 # Numerical method parameters
 # =======================================
 
-tolk = 50 # number of iters
+tolk = 15 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
 nLoadSteps = 63 # Number of load increments
@@ -107,7 +109,7 @@ matFint = sol.matFint
 matUk = sol.matUk
 
 nod = 1
-dofM = nod * 2
+dofM = nod * 3
 
 mVec = matFint[dofM, :]
 
@@ -119,15 +121,16 @@ kappaHistElem = zeros(nelems, nLoadSteps)
 rotXYXZ = Diagonal(ones(4, 4))
 rotXYXZ[2, 2] = -1
 rotXYXZ[4, 4] = -1
+dofsbe = [2, 3, 5, 6]
 
 for j in 1:nelems
     nodeselem = StrMesh.conecMat[j, 3]
-    local elemdofs = nodes2dofs(nodeselem[:], 2)
-    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 2)
+    local elemdofs = nodes2dofs(nodeselem[:], 3)
+    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 3)
     Be = intern_function(0, l) * rotXYXZ
     for i in 1:nLoadSteps
         #elemdofs
-        UkeL = R' * matUk[i][elemdofs]
+        UkeL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
         kappaelem = Be * UkeL
         kappaHistElem[j, i] = abs.(kappaelem[1])
     end
@@ -153,7 +156,6 @@ end
 
 @test (maximum(abs.(abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end])) <= 1e-2
 
-
 # =======================================
 # AL test
 # =======================================
@@ -167,7 +169,7 @@ tolf = 1e-6 # Tolerance of internal forces
 initialDeltaLambda = 1e-3 #
 arcLengthIncrem = vcat(ones(60) * 1e-4) #
 nLoadSteps = length(arcLengthIncrem) # Number of load increments
-controlDofs = [10] #
+controlDofs = [6] #
 scalingProjection = 1 #
 
 # Numerical method settings struct
@@ -190,7 +192,7 @@ matFint = sol.matFint
 matUk = sol.matUk
 
 nod = 1
-dofM = nod * 2
+dofM = nod * 3
 
 mVec = matFint[dofM, :]
 
@@ -205,12 +207,12 @@ rotXYXZ[4, 4] = -1
 
 for j in 1:nelems
     nodeselem = StrMesh.conecMat[j, 3]
-    local elemdofs = nodes2dofs(nodeselem[:], 2)
-    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 2)
+    local elemdofs = nodes2dofs(nodeselem[:], 3)
+    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 3)
     Be = intern_function(0, l) * rotXYXZ
     for i in 1:nLoadSteps
         #elemdofs
-        UkeL = R' * matUk[i][elemdofs]
+        UkeL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
         kappaelem = Be * UkeL
         kappaHistElem[j, i] = abs.(kappaelem[1])
     end

@@ -7,7 +7,7 @@
 function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, problemName)
 
     # Initialize required variables
-    ModelSol, IterData, varFext, λₖ, U, c = initial_defs(Mesh, BoundaryConds, AnalysisSettings,problemName)
+    ModelSol, IterData, varFext, λₖ, U, c = initial_defs(Mesh, BoundaryConds, AnalysisSettings, problemName)
 
     # Counters
     time = 1
@@ -17,7 +17,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
     aux = zeros(length(ModelSol.freeDofs))
 
     while nTimes > time
-
+        #println(time)
         # Sets current disp Vector
         Uₖ = ModelSol.matUk[time]
         convδu = ModelSol.convδu[time]

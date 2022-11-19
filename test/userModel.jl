@@ -79,13 +79,14 @@ StrMesh = Mesh(Nodes, Conec)
 # =======================================
 
 # Define Supports
-supps = [1 Inf Inf]
+supps = [1 Inf Inf Inf]
 
 # Define applied external loads
+Fx = 0
 Fz = -1
 My = 0
 nod = nnodes
-nodalForces = [nod Fz My]
+nodalForces = [nod Fx Fz My]
 
 # BoundaryConds struct
 StrBoundaryConds = BoundaryConds(supps, nodalForces)
@@ -97,9 +98,9 @@ tolk = 50 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
 initialDeltaLambda = 1e-3 #
-arcLengthIncrem = vcat(ones(40) * 4e-4) #
+arcLengthIncrem = vcat(ones(21) * 4e-4) #
 nLoadSteps = length(arcLengthIncrem) # Number of load increments
-controlDofs = [10, 16, 24] #
+controlDofs = [nod * 3 - 1] #
 scalingProjection = 1 #
 
 # Numerical method settings struct
@@ -130,7 +131,7 @@ matUk = sol.matUk
 
 # Clamped node
 nod = 1
-dofM = nod * 2
+dofM = nod * 3
 
 # Reaction Bending moment 
 mVec = matFint[dofM, :]
@@ -143,15 +144,16 @@ kappaHistElem = zeros(nelems, nLoadSteps)
 rotXYXZ = Diagonal(ones(4, 4))
 rotXYXZ[2, 2] = -1
 rotXYXZ[4, 4] = -1
+dofsbe = [2, 3, 5, 6]
 
 for j in 1:nelems
     nodeselem = StrMesh.conecMat[j, 3]
-    local elemdofs = nodes2dofs(nodeselem[:], 2)
-    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 2)
+    local elemdofs = nodes2dofs(nodeselem[:], 3)
+    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 3)
     Be = intern_function(0, l) * rotXYXZ
     for i in 1:nLoadSteps
         #elemdofs
-        UkeL = R' * matUk[i][elemdofs]
+        UkeL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
         kappaelem = Be * UkeL
         kappaHistElem[j, i] = abs.(kappaelem[1])
     end
@@ -170,6 +172,11 @@ for i in 1:nLoadSteps
     κₖ = kappaHistElem[elem, i]
     Mana[i] = κₖ * b * (ca * κₖ^2 * h^5 / 80 + cb * h^3 / 12)
 end
+
+fig = plot(kappaHistElem[elem, :], Mana, markershape=:circle, lw=lw, ms=ms, title="M-κ", label="Analytic", minorgrid=1, draw_arrow=1)
+plot!(fig, kappaHistElem[elem, :], abs.(mVec), markershape=:rect, lw=lw, ms=ms, label="FEM")
+xlabel!("κ")
+ylabel!("M")
 
 err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
 

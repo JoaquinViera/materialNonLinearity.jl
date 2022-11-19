@@ -52,14 +52,15 @@ StrMesh = Mesh(Nodes, Conec)
 # Boundary conditions
 # =======================================
 
-# Define Supports
-supps = [1 Inf Inf]
+# Define Supports [ node ux uz thetay ]
+supps = [1 Inf Inf Inf]
 
 # Define applied external loads
+Fx = 0
 Fz = -1
 My = 0
 nod = nnodes
-nodalForces = [nod Fz My]
+nodalForces = [nod Fx Fz My]
 
 # BoundaryConds struct
 StrBoundaryConds = BoundaryConds(supps, nodalForces)
@@ -67,10 +68,10 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 # Numerical method parameters
 # =======================================
 
-tolk = 50 # number of iters
+tolk = 3 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-nLoadSteps = 3 # Number of load increments
+nLoadSteps = 2 # Number of load increments
 loadFactorsVec = ones(nLoadSteps) # Load scaling factors
 
 # Numerical method settings struct
@@ -82,20 +83,15 @@ StrAnalysisSettings = NewtonRaphson(tolk, tolu, tolf, loadFactorsVec)
 
 sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
 
-# Check KTe
+# Check 
+P = abs(Fz)
 Iy = StrSections.Iy
-Uke = zeros(4)
+A = StrSections.A
 l = 1
-rotXYXZ = Diagonal(ones(4, 4))
-rotXYXZ[2, 2] = -1
-rotXYXZ[4, 4] = -1
-
-Finte, KTe = finte_KT_int(StrMaterialModels, l, [b, h], Uke, 1)
-Kana = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2] * rotXYXZ
 
 # Check First step
 # --------------------------------
-P = abs(Fz)
+
 # Analytical solution
 Man = -P * L
 δan = -P * L^3 / (3 * E * Iy)
@@ -106,9 +102,9 @@ matFint = sol.matFint
 matUk = sol.matUk
 
 nod = 1
-dofM = nod * 2
-dofD = nnodes * 2 - 1
-dofT = nnodes * 2
+dofM = nod * 3
+dofD = nnodes * 3 - 1
+dofT = nnodes * 3
 
 mVec = matFint[dofM, :]
 
@@ -116,7 +112,19 @@ Mnum = mVec[2]
 δNum = matUk[2][dofD]
 θNum = matUk[2][dofT]
 
+# Check stiffness matrix
+Uke = zeros(6)
+rotXYXZ = Diagonal(ones(4, 4))
+rotXYXZ[2, 2] = -1
+rotXYXZ[4, 4] = -1
+
+Finteb, Fintea, KTeb, KTea = finte_KT_int(StrMaterialModels, l, [b, h], Uke, 1)
+
+Kbending = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2] * rotXYXZ
+Kaxial = E * A / l * [1 -1; -1 1]
+
 @test abs(Mnum - Man) <= tolf
 @test abs(δNum - δan) <= tolu
 @test abs(θNum - θan) <= tolu
-@test norm(KTe - Kana) <= 1e-6
+@test norm(KTeb - Kbending) <= 1e-6
+@test norm(KTea - Kaxial) <= 1e-6
