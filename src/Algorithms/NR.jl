@@ -26,8 +26,6 @@ function step!(alg::NewtonRaphson, Uk, ModelSol, KTk, Fintk, time, U, args...)
     δUₖ = KTₖ_red \ (Fext_red - Fint_red)
 
     # Computes Uk
-
-    #Uk[freeDofs] = Uk[freeDofs] + δUₖ
     Uk_red = view(Uk, freeDofs) + δUₖ
     U[freeDofs] = Uk_red
 

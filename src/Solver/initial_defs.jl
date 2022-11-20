@@ -9,7 +9,7 @@ function initial_defs(Mesh, BoundaryConds, AnalysisSettings, name)
     println("Running problem $name")
     println("================================================== \n")
 
-    ndofs = 2 # degrees of freedom per node
+    ndofs = 3 # degrees of freedom per node
     nnodes = size(Mesh.nodesMat, 1)
 
     # Iteration parameters
@@ -22,7 +22,7 @@ function initial_defs(Mesh, BoundaryConds, AnalysisSettings, name)
     loadedNodes = BoundaryConds.nodalForceMatrix[:, 1]
     for i in 1:length(loadedNodes)
         dofs = nodes2dofs(loadedNodes[i], ndofs)
-        varFext[dofs] = BoundaryConds.nodalForceMatrix[i, 2:3]
+        varFext[dofs] = BoundaryConds.nodalForceMatrix[i, 2:4]
     end
 
     # Solution parameters

@@ -13,11 +13,13 @@ problemName = "CantileverEPP"
 E = 28e6
 σY = 3e3
 K = -E / 100
+ne = 20
+ns = 20
 
 import materialNonLinearity: constitutive_model
 
 # Materials struct
-StrMaterialModels = UserModel()
+StrMaterialModels = UserModel(ne, ns)
 
 
 function constitutive_model(ElemMaterialModel::UserModel, εₖ)
@@ -90,7 +92,7 @@ StrSections = Rectangle(; b, h)
 
 # Nodes
 L = 1
-nnodes = 31
+nnodes = 41
 xcoords = collect(LinRange(0, L, nnodes))
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
@@ -113,13 +115,14 @@ StrMesh = Mesh(Nodes, Conec)
 # =======================================
 
 # Define Supports
-supps = [1 Inf Inf]
+supps = [1 Inf Inf Inf]
 
 # Define applied external loads
+Fx = 0
 Fz = -0.1
 My = 0
 nod = nnodes
-nodalForces = [nod Fz My]
+nodalForces = [nod Fx Fz My]
 
 # BoundaryConds struct
 StrBoundaryConds = BoundaryConds(supps, nodalForces)
@@ -129,11 +132,13 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 
 tolk = 50 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
-tolf = 1e-6 # Tolerance of internal forces
-nLoadSteps = 120 # Number of load increments
+tolf = 1e-8 # Tolerance of internal forces
+#nLoadSteps = 15 # Number of load increments
 initialDeltaLambda = 1e-5 #
-arcLengthIncrem = [1e-5] #
-controlDofs = [10] #
+arcLengthIncrem = vcat(ones(15) * 1e-5, ones(5) * 5e-6) #
+arcLengthIncrem = vcat(ones(15) * 5e-6, ones(10) * 1e-6) #
+nLoadSteps = length(arcLengthIncrem)
+controlDofs = [5, 8, 11] #
 scalingProjection = 1 #
 
 # Numerical method settings struct
@@ -164,11 +169,11 @@ matUk = sol.matUk
 
 # Clamped node
 nod = 1
-dofM = nod * 2
+dofM = nod * 3
 
 # Loaded node
-dofD = nnodes * 2 - 1
-dofT = nnodes * 2
+dofD = nnodes * 3 - 1
+dofT = nnodes * 3
 
 # Reaction Bending moment 
 mVec = matFint[dofM, :]
@@ -184,17 +189,17 @@ kappaHistElem = zeros(nelems, nLoadSteps)
 rotXYXZ = Diagonal(ones(4, 4))
 rotXYXZ[2, 2] = -1
 rotXYXZ[4, 4] = -1
+dofsbe = [2, 3, 5, 6]
 
 for j in 1:nelems
     nodeselem = StrMesh.conecMat[j, 3]
-    local elemdofs = nodes2dofs(nodeselem[:], 2)
-    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 2)
+    local elemdofs = nodes2dofs(nodeselem[:], 3)
+    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 3)
     Be = intern_function(0, l) * rotXYXZ
     for i in 1:nLoadSteps
         #elemdofs
-        UkeL = R' * matUk[i][elemdofs]
+        UkeL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
         kappaelem = Be * UkeL
-
         kappaHistElem[j, i] = abs.(kappaelem[1])
     end
 end

@@ -8,7 +8,6 @@ struct ArcLength <: AbstractAlgorithm
     nTimes::Int64
     initialDeltaLambda::Float64
     arcLengthIncrem::Vector{Float64}
-    #arcLengthIncrem::Float64
     controlDofs::Vector{Int64}
     scalingProjection::Float64
 end
@@ -30,7 +29,8 @@ function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, U, dispIter, 
     δū = view(deltas, :, 2)
 
     arcLengthNorm = zeros(length(freeDofs))
-    arcLengthNorm[1:2:end] .= 1
+    arcLengthNorm[1:3:end] .= 1
+    arcLengthNorm[2:3:end] .= 1
 
     if length(alg.arcLengthIncrem) > 1
         Δl = view(alg.arcLengthIncrem, time)[1]
@@ -55,6 +55,8 @@ function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, U, dispIter, 
 
     Uk_red = view(Uₖ, freeDofs) + δUₖ
     U[freeDofs] = Uk_red
+
+    #println(Fint_red[end-2])
 
     return copy(U), δUₖ, δλ, currδu
 
