@@ -173,11 +173,6 @@ for i in 1:nLoadSteps
     Mana[i] = κₖ * b * (ca * κₖ^2 * h^5 / 80 + cb * h^3 / 12)
 end
 
-fig = plot(kappaHistElem[elem, :], Mana, markershape=:circle, lw=lw, ms=ms, title="M-κ", label="Analytic", minorgrid=1, draw_arrow=1)
-plot!(fig, kappaHistElem[elem, :], abs.(mVec), markershape=:rect, lw=lw, ms=ms, label="FEM")
-xlabel!("κ")
-ylabel!("M")
-
 err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
 
 @test (maximum(abs.(abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end])) <= 1e-2

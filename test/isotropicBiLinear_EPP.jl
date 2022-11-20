@@ -12,13 +12,12 @@ problemName = "isotropicBiLinear_EPP"
 # =======================================
 E = 210e6
 σY0 = 250e3
-K = 0.0
-ne = 16
-ns = 16
+K = E / 10
+ne = 12
+ns = 12
 
 # Materials struct
 StrMaterialModels = IsotropicBiLinear(E, σY0, K, ne, ns)
-#StrMaterialModels = LinearElastic(E, ne, ns)
 
 # Define section
 # =======================================
@@ -97,6 +96,7 @@ StrAnalysisSettings = NewtonRaphson(tolk, tolu, tolf, loadFactorsVec)
 # ===============================================
 
 sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
+
 
 # Auxiliar
 # --------------------------------
