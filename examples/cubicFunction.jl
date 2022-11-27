@@ -3,7 +3,7 @@
 # ===============================================
 
 # Load solver module
-using materialNonLinearity, Plots, LinearAlgebra
+using materialNonLinearity, Plots, LinearAlgebra, FastGaussQuadrature
 
 # example name
 problemName = "cubicFunction"
@@ -12,12 +12,14 @@ problemName = "cubicFunction"
 # =======================================
 E = 210e6
 σY = 250e3
+ne = 20
+ns = 20
 
 import materialNonLinearity: constitutive_model
 
 
 # Materials struct
-StrMaterialModels = UserModel()
+StrMaterialModels = UserModel(ne, ns)
 
 function constitutive_model(ElemMaterialModel::UserModel, εₖ)
 
@@ -55,7 +57,7 @@ StrSections = Rectangle(; b, h)
 
 # Nodes
 L = 1
-nnodes = 31
+nnodes = 21
 xcoords = collect(LinRange(0, L, nnodes))
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
@@ -78,13 +80,14 @@ StrMesh = Mesh(Nodes, Conec)
 # =======================================
 
 # Define Supports
-supps = [1 Inf Inf]
+supps = [1 Inf Inf Inf]
 
 # Define applied external loads
+Fx = 0
 Fz = -1
 My = 0
 nod = nnodes
-nodalForces = [nod Fz My]
+nodalForces = [nod Fx Fz My]
 
 # BoundaryConds struct
 StrBoundaryConds = BoundaryConds(supps, nodalForces)
@@ -93,13 +96,14 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 # =======================================
 
 tolk = 50 # number of iters
-tolu = 1e-4 # Tolerance of converged disps
+tolu = 1e-7 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-initialDeltaLambda = 1e-3 #
-#arcLengthIncrem = vcat(ones(30) * 1e-4, ones(5) * 5e-5, ones(15) * 1e-5) #
-arcLengthIncrem = vcat(ones(40) * 4e-4, ones(1) * 1e-5) #
+initialDeltaLambda = 1e-5 #
+# arcLengthIncrem = vcat(ones(10) * 4e-4) #
+#arcLengthIncrem = vcat(ones(15) * 1e-4, ones(5) * 1e-5, ones(15) * 2e-6, ones(619) * 1e-6, ones(2) * 5e-7) #
+arcLengthIncrem = vcat(ones(15) * 1e-4, ones(5) * 1e-5, ones(16) * 2e-6, ones(619) * 2e-6) #
 nLoadSteps = length(arcLengthIncrem) # Number of load increments
-controlDofs = [10, 16, 24] #
+controlDofs = [6] #
 scalingProjection = 1 #
 
 # Numerical method settings struct
@@ -117,8 +121,9 @@ strPlots = PlotSettings(lw, ms, color)
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
+sol, time, IterData, σArr = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
 
+println(IterData.stopCrit)
 # Post process
 # --------------------------------
 P = abs(Fz)
@@ -130,17 +135,20 @@ matUk = sol.matUk
 
 # Clamped node
 nod = 1
-dofM = nod * 2
+dofM = nod * 3
 
 # Loaded node
-dofD = nnodes * 2 - 1
-dofT = nnodes * 2
+dofD = nnodes * 3 - 1
+dofT = nnodes * 3
 
 # Reaction Bending moment 
 mVec = matFint[dofM, :]
 
-#tVec = abs.(matUk[dofT, :])
-#dVec = abs.(matUk[dofD, :])
+# Reaction Bending moment 
+mVec = matFint[dofM, :]
+println(mVec[end])
+dVec = hcat([i[dofD] for i in matUk])
+tVec = hcat([i[dofT] for i in matUk])
 pVec = abs.(mVec / L)
 
 # Compute curvatures
@@ -151,17 +159,17 @@ kappaHistElem = zeros(nelems, nLoadSteps)
 rotXYXZ = Diagonal(ones(4, 4))
 rotXYXZ[2, 2] = -1
 rotXYXZ[4, 4] = -1
+dofsbe = [2, 3, 5, 6]
 
 for j in 1:nelems
     nodeselem = StrMesh.conecMat[j, 3]
-    local elemdofs = nodes2dofs(nodeselem[:], 2)
-    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 2)
+    local elemdofs = nodes2dofs(nodeselem[:], 3)
+    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 3)
     Be = intern_function(0, l) * rotXYXZ
     for i in 1:nLoadSteps
         #elemdofs
-        UkeL = R' * matUk[i][elemdofs]
+        UkeL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
         kappaelem = Be * UkeL
-
         kappaHistElem[j, i] = abs.(kappaelem[1])
     end
 end
@@ -188,19 +196,22 @@ println(maxErrMk)
 # --------------------------------
 elem = 1
 fig = plot(kappaHistElem[elem, :], abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
-plot!(fig, kappaHistElem[elem, :], Mana, markershape=:rect, lw=lw, ms=ms, label="Analytic")
+#plot!(fig, kappaHistElem[elem, :], Mana, markershape=:rect, lw=lw, ms=ms, label="Analytic")
 xlabel!("κ")
 ylabel!("M")
 
 # P-δ plot  
 # --------------------------------
-figPdelta = plot(dVec, pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+fig2 = plot(abs.(dVec), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 xlabel!("δ")
 ylabel!("P")
 
-figPdelta2 = plot(dVec[end-15:end], pVec[end-15:end], markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
-xlabel!("δ")
-ylabel!("P")
 
 #plotlyjs()
-fig3 = plot3d(dVec, tVec, pVec, markershape=:circle, lw=lw, ms=ms, title="(δ,θ,P)", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+fig3 = plot3d(abs.(dVec)[:, 1], tVec[:, 1], pVec, markershape=:circle, lw=lw, ms=ms, title="(δ,θ,P)", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+
+p, w = gausslegendre(ns)
+
+
+sfig = plot(σArr[end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label="stress", minorgrid=1, draw_arrow=1)
+plot!(sfig, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="z", color=:"black")

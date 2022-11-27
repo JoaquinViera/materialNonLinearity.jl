@@ -12,7 +12,7 @@ struct ArcLength <: AbstractAlgorithm
     scalingProjection::Float64
 end
 
-function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, U, dispIter, varFext, currδu, convδu, c)
+function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, U, dispIter, varFext, currδu, convδu, c, λₖ)
 
     Fextk = ModelSol.Fextk
     freeDofs = ModelSol.freeDofs
@@ -23,14 +23,17 @@ function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, U, dispIter, 
     KTₖ_red = view(KTₖ, freeDofs, freeDofs)
 
     r = [Fext_red - Fint_red varFext]
+
     deltas = KTₖ_red \ r
 
     δu⃰ = view(deltas, :, 1)
     δū = view(deltas, :, 2)
 
-    arcLengthNorm = zeros(length(freeDofs))
+
+    arcLengthNorm = zeros(length(Uₖ))
     arcLengthNorm[1:3:end] .= 1
     arcLengthNorm[2:3:end] .= 1
+    arcLengthNorm = view(arcLengthNorm, freeDofs)
 
     if length(alg.arcLengthIncrem) > 1
         Δl = view(alg.arcLengthIncrem, time)[1]
@@ -39,7 +42,7 @@ function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, U, dispIter, 
     end
 
     if dispIter == 1 # Predictor
-        if norm(Uₖ) == 0
+        if norm(convδu) == 0
             δλ = alg.initialDeltaLambda
         else
             δλ = sign((convδu' * (arcLengthNorm .* δū))) * Δl / sqrt(δū' * (arcLengthNorm .* δū))
@@ -50,20 +53,17 @@ function step!(alg::ArcLength, Uₖ, ModelSol, KTₖ, Fintk, time, U, dispIter, 
     end
 
     δUₖ = δu⃰ + δλ * δū
-
     currδu = δUₖ + currδu
 
     Uk_red = view(Uₖ, freeDofs) + δUₖ
     U[freeDofs] = Uk_red
-
-    #println(Fint_red[end-2])
 
     return copy(U), δUₖ, δλ, currδu
 
 end
 
 function sets!(alg::ArcLength, nnodes, ndofs, args...)
-    λₖ = alg.initialDeltaLambda
+    λₖ = 0.0
     c = zeros(nnodes * ndofs)
     c[alg.controlDofs] .= alg.scalingProjection
     U = zeros(nnodes * ndofs)

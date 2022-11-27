@@ -86,7 +86,7 @@ tolk = 15 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
 nLoadSteps = 63 # Number of load increments
-loadFactorsVec = ones(nLoadSteps) # Load scaling factors
+loadFactorsVec = collect(1:nLoadSteps) # Load scaling factors
 
 # Numerical method settings struct
 StrAnalysisSettings = NewtonRaphson(tolk, tolu, tolf, loadFactorsVec)

@@ -43,5 +43,7 @@ include("Algorithms/NR.jl")
 include("Algorithms/AL.jl")
 # Convergence check
 include("Algorithms/convergence_check.jl")
+# Compute Fext
+include("Algorithms/compute_Fext.jl")
 
 end # module

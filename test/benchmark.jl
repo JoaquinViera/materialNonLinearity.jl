@@ -1,5 +1,11 @@
 # isotropic Bilinear
 
+a = [[1, 2, 3], [4, 5, 6], [7, 11, 15]]
+
+for i in a
+    b = hcat(b, a[i][3])
+end
+
 # using LinearAlgebra, BenchmarkTools
 
 #using ProgressMeter
@@ -139,32 +145,32 @@ t = 100
  12.314 s (138027697 allocations: 5.81 GiB)
  =#
 
- #=
+#=
 using BenchmarkTools
 
 function nodes2dofs(nodes, ndofs)
 
-    n = length(nodes)
-    gdl = zeros(Int64, n * ndofs)
-    vec = Vector(1:ndofs)
-    for i in 1:n
-        gdl[(i-1)*ndofs.+vec] = (nodes[i] - 1) * ndofs .+ vec
-    end
-    return gdl
+   n = length(nodes)
+   gdl = zeros(Int64, n * ndofs)
+   vec = Vector(1:ndofs)
+   for i in 1:n
+       gdl[(i-1)*ndofs.+vec] = (nodes[i] - 1) * ndofs .+ vec
+   end
+   return gdl
 end
 
 @btime nodes2dofs([1, 2], 6)
 
 
 function nodes2dofs2(nodes, degreespernode)
-    n = length(nodes)
-    dofs = Vector{Int64}(undef, n * degreespernode)
-    for i = 1:n
-        for j = 1:degreespernode
-            @inbounds dofs[(i-1)*degreespernode+j] = degreespernode * (nodes[i] - 1) + j
-        end
-    end
-    return dofs
+   n = length(nodes)
+   dofs = Vector{Int64}(undef, n * degreespernode)
+   for i = 1:n
+       for j = 1:degreespernode
+           @inbounds dofs[(i-1)*degreespernode+j] = degreespernode * (nodes[i] - 1) + j
+       end
+   end
+   return dofs
 end
 
 

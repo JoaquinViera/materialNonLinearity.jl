@@ -3,18 +3,20 @@
 # ===============================================
 
 # Load solver module
-using materialNonLinearity, Plots, LinearAlgebra
+using materialNonLinearity, Plots, LinearAlgebra, FastGaussQuadrature
 
 # example name
-problemName = "CantileverEPP"
+problemName = "Concrete"
 
 # Define material model
 # =======================================
 E = 28e6
 σY = 3e3
-K = -E / 100
+K = -E
 ne = 20
 ns = 20
+
+
 
 import materialNonLinearity: constitutive_model
 
@@ -31,7 +33,7 @@ function constitutive_model(ElemMaterialModel::UserModel, εₖ)
 
     # Tension
     eps1 = fctmfl / E
-    K = -E / 100
+    K = -E
 
     # Compression
     if fck <= 50
@@ -44,15 +46,16 @@ function constitutive_model(ElemMaterialModel::UserModel, εₖ)
         n = 1.4 + 9.6 * ((100 - fck) / 100)^4
     end
 
-    if εₖ >= 0
+    if εₖ >= 0.0
         # Tension
         if εₖ <= eps1
             σ = E * εₖ
             ∂σ∂ε = E
         else
             if εₖ >= eps1 * (1 - E / K)
-                σ = 0
-                ∂σ∂ε = 0
+                σ = 0.0
+                ∂σ∂ε = 0.0
+                # println("n")
             else
                 σ = fctmfl + K * (εₖ - eps1)
                 ∂σ∂ε = K
@@ -60,7 +63,7 @@ function constitutive_model(ElemMaterialModel::UserModel, εₖ)
         end
         #Compression
     else
-        epsc = abs(εₖ)
+        #epsc = abs(εₖ)
         #=
                 if epsc <= epsc0
                     σ = -fcd * (1 - (1 - epsc / epsc0) .^ n) * 1000
@@ -92,7 +95,7 @@ StrSections = Rectangle(; b, h)
 
 # Nodes
 L = 1
-nnodes = 41
+nnodes = 21
 xcoords = collect(LinRange(0, L, nnodes))
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
@@ -119,7 +122,7 @@ supps = [1 Inf Inf Inf]
 
 # Define applied external loads
 Fx = 0
-Fz = -0.1
+Fz = -1
 My = 0
 nod = nnodes
 nodalForces = [nod Fx Fz My]
@@ -130,19 +133,19 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 # Numerical method parameters
 # =======================================
 
-tolk = 50 # number of iters
-tolu = 1e-4 # Tolerance of converged disps
-tolf = 1e-8 # Tolerance of internal forces
-#nLoadSteps = 15 # Number of load increments
+tolk = 75 # number of iters
+tolu = 1e-10 # Tolerance of converged disps
+tolf = 1e-6 # Tolerance of internal forces
 initialDeltaLambda = 1e-5 #
-arcLengthIncrem = vcat(ones(15) * 1e-5, ones(5) * 5e-6) #
-arcLengthIncrem = vcat(ones(15) * 5e-6, ones(10) * 1e-6) #
+#arcLengthIncrem = vcat(ones(6) * 1e-4, ones(17) * 1e-5, ones(75) * 1e-6)  # compresion lineal
+arcLengthIncrem = vcat(ones(6) * 1e-4, ones(4) * 1e-5, ones(30) * 2e-6)  # compresion polinomica
 nLoadSteps = length(arcLengthIncrem)
-controlDofs = [5, 8, 11] #
+controlDofs = [6] #
 scalingProjection = 1 #
 
 # Numerical method settings struct
 StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
+
 
 # Plot parameters
 # =======================================
@@ -156,12 +159,16 @@ strPlots = PlotSettings(lw, ms, color)
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
+sol, time, IterData, σArr = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
+
+println(IterData.stopCrit)
 
 # Post process
 # --------------------------------
 P = abs(Fz)
 Iy = StrSections.Iy
+Mfis = σY * Iy / (h / 2)
+println(Mfis)
 
 # Numerical solution
 matFint = sol.matFint
@@ -177,8 +184,8 @@ dofT = nnodes * 3
 
 # Reaction Bending moment 
 mVec = matFint[dofM, :]
-
-#dVec = abs.(matUk[dofD, :])
+println(mVec[end])
+dVec = hcat([i[dofD] for i in matUk])
 pVec = abs.(mVec / L)
 
 # Compute curvatures
@@ -206,7 +213,7 @@ end
 
 # Analytical solution M-κ
 # --------------------------------
-
+#=
 Mana = zeros(nLoadSteps)
 C = K
 epsY = σY / E
@@ -228,20 +235,23 @@ end
 err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
 maxErrMk = maximum(err)
 println(maxErrMk)
-
+=#
 # M-κ plot  
 # --------------------------------
 elem = 1
-fig = plot(kappaHistElem[elem, :], abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1)
-plot!(fig, kappaHistElem[elem, :], Mana, markershape=:rect, lw=lw, ms=ms, label="Analytic")
+fig = plot(kappaHistElem[elem, :], abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+#plot!(fig, kappaHistElem[elem, :], Mana, markershape=:rect, lw=lw, ms=ms, label="Analytic")
 xlabel!("κ")
 ylabel!("M")
 
 # P-δ plot  
 # --------------------------------
-figPdelta = plot(dVec, pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1)
+fig2 = plot(abs.(dVec), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 xlabel!("δ")
 ylabel!("P")
 
+p, w = gausslegendre(ns)
 
 
+sfig = plot(σArr[end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label="stress", minorgrid=1, draw_arrow=1)
+plot!(sfig, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="z", color=:"black")
