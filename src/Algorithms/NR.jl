@@ -31,7 +31,6 @@ function step!(alg::NewtonRaphson, Uk, ModelSol, KTk, Fintk, time, U, args...)
 
     # Computes load factor
     λₖ = view(alg.loadFactors, time)[1]
-
     return copy(U), δUₖ, λₖ, nothing
 
 end

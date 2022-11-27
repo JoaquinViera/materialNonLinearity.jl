@@ -2,7 +2,7 @@
 # Computes Internal force and tanget stiffness matrix
 #
 
-function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
+function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time, elem)
 
     rotXYXZ = Diagonal(ones(4, 4))
     rotXYXZ[2, 2] = -1
@@ -11,6 +11,7 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
     # Axial
     KTea = zeros(2, 2)
     Fintea = zeros(2)
+
 
     # Bending
     KTeb = zeros(4, 4)
@@ -27,7 +28,7 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
 
     xge, we = gausslegendre(ElemMaterialModel.ne)
     xgs, ws = gausslegendre(ElemMaterialModel.ns)
-
+    minXe = minimum(xge)
     pgeVec = l / 2 * xge .+ l / 2
     pgsVec = h / 2 * xgs
 
@@ -68,6 +69,10 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
                 secKTea = h / 2 * (b * ∂σ∂ε * ws[m]) + secKTea
                 secKTeb = h / 2 * (b * ∂σ∂ε * pgs^2 * ws[m]) + secKTeb
                 #secKTeab = h / 2 * (b * ∂σ∂ε * (-pgs) * ws[m]) + secKTeab
+            else
+                if minXe == xge[j] && elem == 1
+                    σArr[time+1][m] = σ
+                end
             end
 
         end # endfor ws
@@ -87,6 +92,6 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool)
 
     end
 
-    return Finteb, Fintea, KTeb, KTea
+    return Finteb, Fintea, σArr, KTeb, KTea
 end
 

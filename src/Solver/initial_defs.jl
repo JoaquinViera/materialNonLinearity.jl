@@ -57,7 +57,6 @@ function initial_defs(Mesh, BoundaryConds, AnalysisSettings, name)
     free_dofs = copy(dofs_vec)
     deleteat!(free_dofs, fixed_dofs)
 
-
     δUₖ = Vector{Vector{Float64}}(undef, nTimes)
     δUₖ[1] = zeros(length(free_dofs))
 

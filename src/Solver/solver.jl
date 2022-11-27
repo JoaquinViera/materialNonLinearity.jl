@@ -16,32 +16,38 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
     pbar = Progress(nTimes, dt=0.25, barglyphs=BarGlyphs("[=> ]"), barlen=35, color=:cyan)
     aux = zeros(length(ModelSol.freeDofs))
 
+    σArr = [zeros(MaterialModel.ns) for _ in 1:nTimes]
+
     while nTimes > time
-        #println(time)
         # Sets current disp Vector
         Uₖ = ModelSol.matUk[time]
         convδu = ModelSol.convδu[time]
         currδu = aux
 
         # increment external force
-        time > 1 ? λₖ = view(ModelSol.loadFactors, time)[1] : nothing
-
-        ModelSol.Fextk = ModelSol.Fextk + λₖ * varFext
+        time > 1 ? λₖ = view(ModelSol.loadFactors, time)[1] : λₖ = 0
         ModelSol.matFext[time] = ModelSol.Fextk
+
+        ModelSol.Fextk = compute_Fext!(AnalysisSettings, varFext, 0.0, time, ModelSol.Fextk)
 
         # Iters
         dispIter = 0 # iter counter
         convIter = 0 # Convergence control parameter
 
         while convIter == 0
+            # Updates displacement iter
+            dispIter += 1
             # Computes Tangent Stiffness Matrix KTₖ & Internal Forces
-            Fintₖ, KTₖ = assembler(Section, MaterialModel, Mesh, Uₖ, 1)
+            Fintₖ, σArr, KTₖ = assembler(Section, MaterialModel, Mesh, Uₖ, 1, σArr, time)
 
             # Computes Uₖ & δUₖ
-            Uₖ, δUₖ, λₖ, currδu = step!(AnalysisSettings, Uₖ, ModelSol, KTₖ, Fintₖ, time, U, dispIter, varFext, currδu, convδu, c)
+            Uₖ, δUₖ, λₖ, currδu = step!(AnalysisSettings, Uₖ, ModelSol, KTₖ, Fintₖ, time, U, dispIter, varFext, currδu, convδu, c, λₖ)
 
             # Computes Fintₖ at computed Uₖ
-            Fintₖ = assembler(Section, MaterialModel, Mesh, Uₖ, 0)
+            Fintₖ, σArr = assembler(Section, MaterialModel, Mesh, Uₖ, 0, σArr, time)
+
+            # Computes Fext
+            ModelSol.Fextk = compute_Fext!(AnalysisSettings, varFext, λₖ, time, ModelSol.Fextk)
 
             # Check convergence
             cond, convIter = convergence_check(Uₖ[ModelSol.freeDofs], δUₖ, ModelSol.Fextk[ModelSol.freeDofs], Fintₖ[ModelSol.freeDofs], AnalysisSettings, dispIter, time)
@@ -51,8 +57,6 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
                 ModelSol, IterData = store_sol(time, ModelSol, IterData, Uₖ, δUₖ, Fintₖ, λₖ, cond)
             end
 
-            # Updates displacement iter
-            dispIter += 1
         end
         # Updates time
         time += 1
@@ -67,5 +71,5 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
 
     println("\n\n")
 
-    return ModelSol, time, IterData
+    return ModelSol, time, IterData, σArr
 end

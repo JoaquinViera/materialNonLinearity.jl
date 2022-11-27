@@ -13,9 +13,11 @@ problemName = "CantileverEPP"
 E = 210e6
 σY = 250e3
 K = -E / 100
+ne = 16
+ns = 16
 
 # Materials struct
-StrMaterialModels = IsotropicBiLinear(E, σY, K)
+StrMaterialModels = IsotropicBiLinear(E, σY, K, ne, ns)
 
 # Define section
 # =======================================
@@ -30,7 +32,7 @@ StrSections = Rectangle(; b, h)
 
 # Nodes
 L = 1
-nnodes = 21
+nnodes = 101
 xcoords = collect(LinRange(0, L, nnodes))
 #t = 0:1/(nnodes-1):1
 #xcoords = t .^ 1.5 * L
@@ -55,13 +57,14 @@ StrMesh = Mesh(Nodes, Conec)
 # =======================================
 
 # Define Supports
-supps = [1 Inf Inf]
+supps = [1 Inf Inf Inf]
 
 # Define applied external loads
+Fx = 0
 Fz = -1
 My = 0
 nod = nnodes
-nodalForces = [nod Fz My]
+nodalForces = [nod Fx Fz My]
 
 # BoundaryConds struct
 StrBoundaryConds = BoundaryConds(supps, nodalForces)
@@ -70,15 +73,18 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 # =======================================
 
 tolk = 50 # number of iters
-tolu = 1e-4 # Tolerance of converged disps
+tolu = 1e-7 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
 
 initialDeltaLambda = 1e-2 #
-arcLengthIncrem = vcat(ones(120) * 1e-4, ones(5) * 1e-4) #
-#arcLengthIncrem = [1e-4] #
+
+arcLengthIncrem = vcat(ones(18) * 1e-3, ones(80) * 1e-4) # 21 nodes
+arcLengthIncrem = vcat(ones(28) * 1e-3, ones(23) * 1e-4, ones(200) * 1e-5) # 51 nodes
+arcLengthIncrem = vcat(ones(39) * 1e-3, ones(21) * 1e-4, ones(30) * 1e-5) # 101 nodes
+
 nLoadSteps = length(arcLengthIncrem) # Number of load increments
 #nLoadSteps = 1 # Number of load increments
-controlDofs = [10] #
+controlDofs = [6] #
 scalingProjection = 1 #
 
 # Numerical method settings struct
@@ -98,9 +104,11 @@ strPlots = PlotSettings(lw, ms, color)
 
 sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
 
-using BenchmarkTools
 
-@btime solver($StrSections, $StrMaterialModels, $StrMesh, $StrBoundaryConds, $StrAnalysisSettings, problemName)
+println(IterData.stopCrit)
+#using BenchmarkTools
+
+#@btime solver($StrSections, $StrMaterialModels, $StrMesh, $StrBoundaryConds, $StrAnalysisSettings, problemName)
 
 # Post process
 # --------------------------------
@@ -119,11 +127,11 @@ matUk = sol.matUk
 
 # Clamped node
 nod = 1
-dofM = nod * 2
+dofM = nod * 3
 
 # Loaded node
-dofD = nnodes * 2 - 1
-dofT = nnodes * 2
+dofD = nnodes * 3 - 1
+dofT = nnodes * 3
 
 # Reaction Bending moment 
 mVec = matFint[dofM, :]
@@ -151,17 +159,17 @@ kappaHistElem = zeros(nelems, nLoadSteps)
 rotXYXZ = Diagonal(ones(4, 4))
 rotXYXZ[2, 2] = -1
 rotXYXZ[4, 4] = -1
+dofsbe = [2, 3, 5, 6]
 
 for j in 1:nelems
     nodeselem = StrMesh.conecMat[j, 3]
-    local elemdofs = nodes2dofs(nodeselem[:], 2)
-    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 2)
+    local elemdofs = nodes2dofs(nodeselem[:], 3)
+    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 3)
     Be = intern_function(0, l) * rotXYXZ
     for i in 1:nLoadSteps
         #elemdofs
-        UkeL = R' * matUk[i][elemdofs]
+        UkeL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
         kappaelem = Be * UkeL
-
         kappaHistElem[j, i] = abs.(kappaelem[1])
     end
 end
@@ -196,7 +204,7 @@ My = σY * b * h^2 / 6
 # M-κ plot  
 # --------------------------------
 
-fig = plot(kappaHistElem[elem, :], Mana, markershape=:circle, lw=lw, ms=ms, title="M-κ", label="Analytic", minorgrid=1, draw_arrow=1)
+fig = plot(kappaHistElem[elem, :], Mana, markershape=:circle, lw=lw, ms=ms, title="M-κ", label="Analytic", minorgrid=1, draw_arrow=1, legend=:bottomright)
 plot!(fig, kappaHistElem[elem, :], abs.(mVec), markershape=:rect, lw=lw, ms=ms, label="FEM")
 xlabel!("κ")
 ylabel!("M")
