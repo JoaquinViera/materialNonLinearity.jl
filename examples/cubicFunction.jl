@@ -117,13 +117,21 @@ color = "black"
 
 strPlots = PlotSettings(lw, ms, color)
 
+# Stress Array
+# =======================================
+elems = [1, nnodes - 1]
+xG_Rel_Ind = 0
+
+StrStressArray = StressArraySets(elems, xG_Rel_Ind)
+
 # ===============================================
 # Process model parameters
 # ===============================================
 
-sol, time, IterData, σArr = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
+sol, time, IterData, σArr = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName, StrStressArray)
 
 println(IterData.stopCrit)
+
 # Post process
 # --------------------------------
 P = abs(Fz)
@@ -194,11 +202,17 @@ println(maxErrMk)
 
 # M-κ plot  
 # --------------------------------
+
+p, w = gausslegendre(ns)
+figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
+
 elem = 1
 fig = plot(kappaHistElem[elem, :], abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 #plot!(fig, kappaHistElem[elem, :], Mana, markershape=:rect, lw=lw, ms=ms, label="Analytic")
 xlabel!("κ")
 ylabel!("M")
+
+savefig(fig, "$(figspath)ejemplo5M-k.png")
 
 # P-δ plot  
 # --------------------------------
@@ -206,12 +220,21 @@ fig2 = plot(abs.(dVec), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", l
 xlabel!("δ")
 ylabel!("P")
 
+savefig(fig2, "$(figspath)ejemplo5P-d.png")
 
 #plotlyjs()
 fig3 = plot3d(abs.(dVec)[:, 1], tVec[:, 1], pVec, markershape=:circle, lw=lw, ms=ms, title="(δ,θ,P)", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 
-p, w = gausslegendre(ns)
+sfig = plot(σArr[1][convert(Int, ceil(nLoadSteps / 10))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(nLoadSteps / 5))]), minorgrid=1, draw_arrow=1, legend=:bottomright)
+plot!(sfig, σArr[1][convert(Int, ceil(2 * nLoadSteps / 10))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(2 * nLoadSteps / 10))]), minorgrid=1, draw_arrow=1)
+plot!(sfig, σArr[1][convert(Int, ceil(3 * nLoadSteps / 10))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(3 * nLoadSteps / 10))]), minorgrid=1, draw_arrow=1)
+plot!(sfig, σArr[1][convert(Int, ceil(4 * nLoadSteps / 10))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(4 * nLoadSteps / 10))]), minorgrid=1, draw_arrow=1)
+plot!(sfig, σArr[1][convert(Int, ceil(5 * nLoadSteps / 10))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(5 * nLoadSteps / 10))]), minorgrid=1, draw_arrow=1)
+plot!(sfig, σArr[1][convert(Int, ceil(6 * nLoadSteps / 10))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(6 * nLoadSteps / 10))]), minorgrid=1, draw_arrow=1)
+plot!(sfig, σArr[1][convert(Int, ceil(7 * nLoadSteps / 10))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(7 * nLoadSteps / 10))]), minorgrid=1, draw_arrow=1)
+plot!(sfig, σArr[1][convert(Int, ceil(8 * nLoadSteps / 10))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(8 * nLoadSteps / 10))]), minorgrid=1, draw_arrow=1)
+plot!(sfig, σArr[1][convert(Int, ceil(9 * nLoadSteps / 10))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(9 * nLoadSteps / 10))]), minorgrid=1, draw_arrow=1)
+plot!(sfig, σArr[1][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
+plot!(sfig, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="", color=:"black")
 
-
-sfig = plot(σArr[end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label="stress", minorgrid=1, draw_arrow=1)
-plot!(sfig, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="z", color=:"black")
+savefig(sfig, "$(figspath)ejemplo5stress1.png")

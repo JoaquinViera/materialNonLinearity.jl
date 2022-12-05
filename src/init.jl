@@ -204,6 +204,21 @@ struct PlotSettings
 end
 
 # ============================================================================
+# Stress array
+# ============================================================================
+
+"""
+    StressArraySets
+
+Struct that defines settings to compute the stress array.
+
+"""
+struct StressArraySets
+    elems::Vector{Int64}
+    xG_Rel_Ind::Int64
+end
+
+# ============================================================================
 # Store Solution
 # ============================================================================
 
