@@ -30,7 +30,7 @@ StrSections = Rectangle(; b, h)
 
 # Nodes
 L = 1
-nnodes = 11
+nnodes = 3
 xcoords = collect(LinRange(0, L, nnodes))
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
@@ -210,3 +210,4 @@ Kaxial = E * A / l * [1 -1; -1 1]
 @test abs(θNum - θan) <= tolu
 @test norm(KTeb - Kbending) <= 1e-6 * norm(Kbending)
 @test norm(KTea - Kaxial) <= 1e-6 * norm(Kaxial)
+

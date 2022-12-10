@@ -26,6 +26,28 @@ function element_geometry(cord1, cord2, ndofs)
     return R, l
 end
 
+function frame_curvature(nelems, Mesh, len, matUk)
+
+    ndofs = 3
+    κHistElem = zeros(nelems, len)
+    rotXYXZ = Diagonal(ones(4, 4))
+    rotXYXZ[2, 2] = -1
+    rotXYXZ[4, 4] = -1
+    dofsbe = [2, 3, 5, 6]
+
+    for j in 1:nelems
+        nodeselem = Mesh.conecMat[j, ndofs]
+        elemdofs = nodes2dofs(nodeselem[:], ndofs)
+        R, l = element_geometry(view(Mesh.nodesMat, nodeselem[1], :), view(Mesh.nodesMat, nodeselem[2], :), ndofs)
+        Bₑ = intern_function(0, l) * rotXYXZ
+        for i in 1:len
+            UₖₑL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
+            κHistElem[j, i] = (Bₑ*UₖₑL)[1]
+        end
+    end
+    return κHistElem
+end
+
 function intern_function(x, l)
     N1 = (12x - 6l) / l^3
     N2 = (6x - 4l) / l^2

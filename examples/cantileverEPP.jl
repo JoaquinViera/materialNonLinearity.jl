@@ -200,6 +200,18 @@ savefig(fig, "ejemplo3M-k.png")
 
 err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
 maxErrMk = maximum(err)
+
+# Bending moment plot
+# --------------------------------
+
+using Plots
+include("../src/Utils/plots.jl")
+
+ndivs = 10
+timesPlot = [nLoadSteps]
+figm = BendingMomentPlot(ndivs, nelems, matUk, timesPlot, StrMesh, StrSections, StrMaterialModels)
+
+
 #=
 # convergence analysis
 κₚ = 0.4 # 1/m
