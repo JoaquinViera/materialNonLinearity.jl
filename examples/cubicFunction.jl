@@ -3,7 +3,7 @@
 # ===============================================
 
 # Load solver module
-using materialNonLinearity, Plots, LinearAlgebra, FastGaussQuadrature
+using materialNonLinearity, Plots, LinearAlgebra, FastGaussQuadrature, Printf
 
 # example name
 problemName = "cubicFunction"
@@ -159,46 +159,27 @@ dVec = hcat([i[dofD] for i in matUk])
 tVec = hcat([i[dofT] for i in matUk])
 pVec = abs.(mVec / L)
 
-# Compute curvatures
+# Compute curvature κ
 # --------------------------------
-
-kappaHistElem = zeros(nelems, nLoadSteps)
-
-rotXYXZ = Diagonal(ones(4, 4))
-rotXYXZ[2, 2] = -1
-rotXYXZ[4, 4] = -1
-dofsbe = [2, 3, 5, 6]
-
-for j in 1:nelems
-    nodeselem = StrMesh.conecMat[j, 3]
-    local elemdofs = nodes2dofs(nodeselem[:], 3)
-    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 3)
-    Be = intern_function(0, l) * rotXYXZ
-    for i in 1:nLoadSteps
-        #elemdofs
-        UkeL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
-        kappaelem = Be * UkeL
-        kappaHistElem[j, i] = abs.(kappaelem[1])
-    end
-end
+kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
 
 # Analytical solution M-κ
 # --------------------------------
 
-Mana = zeros(nLoadSteps)
-epsY = σY / E
-ca = -σY / (2 * epsY^3);
-cb = 3 * σY / (2 * epsY);
+# Mana = zeros(nLoadSteps)
+# epsY = σY / E
+# ca = -σY / (2 * epsY^3);
+# cb = 3 * σY / (2 * epsY);
 
-elem = 1
-for i in 1:nLoadSteps
-    kappak = kappaHistElem[elem, i]
-    Mana[i] = kappak * b * (ca * kappak^2 * h^5 / 80 + cb * h^3 / 12)
-end
+# elem = 1
+# for i in 1:nLoadSteps
+#     kappak = kappaHistElem[elem, i]
+#     Mana[i] = kappak * b * (ca * kappak^2 * h^5 / 80 + cb * h^3 / 12)
+# end
 
-err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
-maxErrMk = maximum(err)
-println(maxErrMk)
+# err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
+# maxErrMk = maximum(err)
+# println(maxErrMk)
 
 # M-κ plot  
 # --------------------------------
@@ -207,7 +188,7 @@ p, w = gausslegendre(ns)
 figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
 
 elem = 1
-fig = plot(kappaHistElem[elem, :], abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+fig = plot(abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 #plot!(fig, kappaHistElem[elem, :], Mana, markershape=:rect, lw=lw, ms=ms, label="Analytic")
 xlabel!("κ")
 ylabel!("M")

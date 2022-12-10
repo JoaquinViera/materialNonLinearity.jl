@@ -3,7 +3,7 @@
 # ===============================================
 
 # Load solver module
-using materialNonLinearity, Plots, LinearAlgebra, FastGaussQuadrature
+using materialNonLinearity, Plots, LinearAlgebra, FastGaussQuadrature, Printf
 
 # example name
 problemName = "Concrete"
@@ -137,9 +137,8 @@ tolk = 75 # number of iters
 tolu = 1e-10 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
 initialDeltaLambda = 1e-5 #
-#arcLengthIncrem = vcat(ones(6) * 1e-4, ones(17) * 1e-5, ones(75) * 1e-6)  # compresion lineal
-# arcLengthIncrem = vcat(ones(6) * 1e-4, ones(4) * 1e-5, ones(30) * 2e-6)  # compresion polinomica
-arcLengthIncrem = vcat(ones(13) * 4e-5, ones(4) * 1e-5, ones(40) * 2e-6)  # compresion polinomica
+# arcLengthIncrem = vcat(ones(13) * 4e-5, ones(4) * 1e-5, ones(40) * 2e-6)  # compresion polinomica
+arcLengthIncrem = vcat(ones(13) * 4e-5, ones(4) * 1e-5, ones(40) * 2e-6, ones(250) * 1e-6)  # compresion polinomica
 nLoadSteps = length(arcLengthIncrem)
 controlDofs = [6] #
 scalingProjection = 1 #
@@ -198,26 +197,7 @@ pVec = abs.(mVec / L)
 
 # Compute curvatures
 # --------------------------------
-
-kappaHistElem = zeros(nelems, nLoadSteps)
-
-rotXYXZ = Diagonal(ones(4, 4))
-rotXYXZ[2, 2] = -1
-rotXYXZ[4, 4] = -1
-dofsbe = [2, 3, 5, 6]
-
-for j in 1:nelems
-    nodeselem = StrMesh.conecMat[j, 3]
-    local elemdofs = nodes2dofs(nodeselem[:], 3)
-    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 3)
-    Be = intern_function(0, l) * rotXYXZ
-    for i in 1:nLoadSteps
-        #elemdofs
-        UkeL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
-        kappaelem = Be * UkeL
-        kappaHistElem[j, i] = abs.(kappaelem[1])
-    end
-end
+kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
 
 p, w = gausslegendre(ns)
 figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
@@ -225,7 +205,7 @@ figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
 # M-κ plot  
 # --------------------------------
 elem = 1
-fig = plot(kappaHistElem[elem, :], abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+fig = plot(abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 xlabel!("κ")
 ylabel!("M")
 

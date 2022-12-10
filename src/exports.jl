@@ -2,7 +2,7 @@
 
 # functions
 
-export initial_defs, nodes2dofs, solver
+export initial_defs, nodes2dofs, solver, frame_curvature
 
 # structs
 ## Material models
