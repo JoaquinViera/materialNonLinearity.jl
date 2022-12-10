@@ -98,11 +98,18 @@ color = "black"
 
 strPlots = PlotSettings(lw, ms, color)
 
+# Stress Array
+# =======================================
+elems = []
+xG_Rel_Ind = 0
+
+StrStressArray = StressArraySets(elems, xG_Rel_Ind)
+
 # ===============================================
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
+sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName, StrStressArray)
 
 
 println(IterData.stopCrit)
@@ -154,26 +161,7 @@ end
 # Compute curvatures
 # --------------------------------
 
-kappaHistElem = zeros(nelems, nLoadSteps)
-
-rotXYXZ = Diagonal(ones(4, 4))
-rotXYXZ[2, 2] = -1
-rotXYXZ[4, 4] = -1
-dofsbe = [2, 3, 5, 6]
-
-for j in 1:nelems
-    nodeselem = StrMesh.conecMat[j, 3]
-    local elemdofs = nodes2dofs(nodeselem[:], 3)
-    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 3)
-    Be = intern_function(0, l) * rotXYXZ
-    for i in 1:nLoadSteps
-        #elemdofs
-        UkeL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
-        kappaelem = Be * UkeL
-        kappaHistElem[j, i] = abs.(kappaelem[1])
-    end
-end
-
+kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
 
 # Analytical solution M-κ
 # --------------------------------
@@ -185,11 +173,10 @@ eps_ast = epsY - σY / C
 kappa_ast = 2 * eps_ast / h
 elem = 1
 for i in 1:nLoadSteps
-    kappak = kappaHistElem[elem, i]
+    kappak = abs(kappaHistElem[elem, i])
     if kappak <= kappae
         Mana[i] = E * StrSections.Iy * kappak
     elseif kappak <= kappa_ast
-        #else
         Mana[i] = σY * b * h^2 / 12 * (3 - kappae^2 / kappak^2 + kappak / kappae * C / E * (2 - 3 * kappae / kappak + kappae^3 / kappak^3))
     else
         zy = epsY / kappak
@@ -204,8 +191,8 @@ My = σY * b * h^2 / 6
 # M-κ plot  
 # --------------------------------
 
-fig = plot(kappaHistElem[elem, :], Mana, markershape=:circle, lw=lw, ms=ms, title="M-κ", label="Analytic", minorgrid=1, draw_arrow=1, legend=:bottomright)
-plot!(fig, kappaHistElem[elem, :], abs.(mVec), markershape=:rect, lw=lw, ms=ms, label="FEM")
+fig = plot(abs.(kappaHistElem[elem, :]), Mana, markershape=:circle, lw=lw, ms=ms, title="M-κ", label="Analytic", minorgrid=1, draw_arrow=1, legend=:bottomright)
+plot!(fig, abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:rect, lw=lw, ms=ms, label="FEM")
 xlabel!("κ")
 ylabel!("M")
 

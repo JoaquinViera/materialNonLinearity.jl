@@ -77,11 +77,18 @@ loadFactorsVec = collect(1:nLoadSteps) # Load scaling factors
 # Numerical method settings struct
 StrAnalysisSettings = NewtonRaphson(tolk, tolu, tolf, loadFactorsVec)
 
+# Stress Array
+# =======================================
+elems = []
+xG_Rel_Ind = 0
+
+StrStressArray = StressArraySets(elems, xG_Rel_Ind)
+
 # ===============================================
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
+sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName, StrStressArray)
 
 # Check 
 P = abs(Fz)
@@ -118,7 +125,7 @@ rotXYXZ = Diagonal(ones(4, 4))
 rotXYXZ[2, 2] = -1
 rotXYXZ[4, 4] = -1
 
-Finteb, Fintea, σArr, KTeb, KTea = finte_KT_int(StrMaterialModels, l, [b, h], Uke, 1, [], 1, 1)
+Finteb, Fintea, σArr, KTeb, KTea = finte_KT_int(StrMaterialModels, l, [b, h], Uke, 1, [], 1, 1, StrStressArray)
 
 Kbending = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2] * rotXYXZ
 Kaxial = E * A / l * [1 -1; -1 1]
@@ -152,7 +159,7 @@ StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
+sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName, StrStressArray)
 
 # Check 
 P = abs(Fz) * abs(sol.loadFactors[2])
@@ -193,7 +200,7 @@ rotXYXZ = Diagonal(ones(4, 4))
 rotXYXZ[2, 2] = -1
 rotXYXZ[4, 4] = -1
 
-Finteb, Fintea, σArr, KTeb, KTea = finte_KT_int(StrMaterialModels, l, [b, h], Uke, 1, [], 1, 1)
+Finteb, Fintea, σArr, KTeb, KTea = finte_KT_int(StrMaterialModels, l, [b, h], Uke, 1, [], 1, 1, StrStressArray)
 
 Kbending = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2] * rotXYXZ
 Kaxial = E * A / l * [1 -1; -1 1]

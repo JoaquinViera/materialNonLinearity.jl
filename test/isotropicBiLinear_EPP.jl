@@ -75,6 +75,14 @@ color = "black"
 
 strPlots = PlotSettings(lw, ms, color)
 
+# Stress Array
+# =======================================
+elems = []
+xG_Rel_Ind = 0
+
+StrStressArray = StressArraySets(elems, xG_Rel_Ind)
+
+
 # =======================================
 # NR test
 # =======================================
@@ -95,7 +103,7 @@ StrAnalysisSettings = NewtonRaphson(tolk, tolu, tolf, loadFactorsVec)
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
+sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName, StrStressArray)
 
 
 # Auxiliar
@@ -115,26 +123,8 @@ mVec = matFint[dofM, :]
 
 # Computes curvatures
 # --------------------------------
+kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
 
-kappaHistElem = zeros(nelems, nLoadSteps)
-
-rotXYXZ = Diagonal(ones(4, 4))
-rotXYXZ[2, 2] = -1
-rotXYXZ[4, 4] = -1
-dofsbe = [2, 3, 5, 6]
-
-for j in 1:nelems
-    nodeselem = StrMesh.conecMat[j, 3]
-    local elemdofs = nodes2dofs(nodeselem[:], 3)
-    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 3)
-    Be = intern_function(0, l) * rotXYXZ
-    for i in 1:nLoadSteps
-        #elemdofs
-        UkeL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
-        kappaelem = Be * UkeL
-        kappaHistElem[j, i] = abs.(kappaelem[1])
-    end
-end
 
 # Analytical solution M-κ
 # --------------------------------
@@ -146,7 +136,7 @@ C = E * K / (E + K)
 κ⃰ = 2 * ε⃰ / h
 elem = 1
 for i in 1:nLoadSteps
-    κₖ = kappaHistElem[elem, i]
+    κₖ = abs(kappaHistElem[elem, i])
     if κₖ <= κe
         Mana[i] = E * StrSections.Iy * κₖ
     else
@@ -179,7 +169,7 @@ StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName)
+sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName, StrStressArray)
 
 # Auxiliar
 # --------------------------------
@@ -198,25 +188,7 @@ mVec = matFint[dofM, :]
 
 # Computes curvatures
 # --------------------------------
-
-kappaHistElem = zeros(nelems, nLoadSteps)
-
-rotXYXZ = Diagonal(ones(4, 4))
-rotXYXZ[2, 2] = -1
-rotXYXZ[4, 4] = -1
-
-for j in 1:nelems
-    nodeselem = StrMesh.conecMat[j, 3]
-    local elemdofs = nodes2dofs(nodeselem[:], 3)
-    local R, l = element_geometry(StrMesh.nodesMat[nodeselem[1], :], StrMesh.nodesMat[nodeselem[2], :], 3)
-    Be = intern_function(0, l) * rotXYXZ
-    for i in 1:nLoadSteps
-        #elemdofs
-        UkeL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
-        kappaelem = Be * UkeL
-        kappaHistElem[j, i] = abs.(kappaelem[1])
-    end
-end
+kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
 
 # Analytical solution M-κ
 # --------------------------------
@@ -228,7 +200,7 @@ C = E * K / (E + K)
 κ⃰ = 2 * ε⃰ / h
 elem = 1
 for i in 1:nLoadSteps
-    κₖ = kappaHistElem[elem, i]
+    κₖ = abs(kappaHistElem[elem, i])
     if κₖ <= κe
         Mana[i] = E * StrSections.Iy * κₖ
     else

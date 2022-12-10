@@ -2,7 +2,7 @@
 # Computes Internal force and tanget stiffness matrix
 #
 
-function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time, elem)
+function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time, elem, StressArraySets)
 
     rotXYXZ = Diagonal(ones(4, 4))
     rotXYXZ[2, 2] = -1
@@ -28,7 +28,14 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time
 
     xge, we = gausslegendre(ElemMaterialModel.ne)
     xgs, ws = gausslegendre(ElemMaterialModel.ns)
-    minXe = minimum(xge)
+    # minXe = minimum(xge)
+
+    ind = round(ElemMaterialModel.ne * StressArraySets.xG_Rel_Ind)
+
+    ind == 0 ? ind = 1 : nothing
+
+    relXe = xge[ind]
+
     pgeVec = l / 2 * xge .+ l / 2
     pgsVec = h / 2 * xgs
 
@@ -70,8 +77,15 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time
                 secKTeb = h / 2 * (b * ∂σ∂ε * pgs^2 * ws[m]) + secKTeb
                 #secKTeab = h / 2 * (b * ∂σ∂ε * (-pgs) * ws[m]) + secKTeab
             else
-                if minXe == xge[j] && elem == 1
-                    σArr[time+1][m] = σ
+                # if minXe == xge[j] && elem == 1
+                #     σArr[time+1][m] = σ
+                # end
+                if relXe == xge[j]
+                    for k in 1:length(StressArraySets.elems)
+                        if elem == StressArraySets.elems[k]
+                            σArr[k][time+1][m] = σ
+                        end
+                    end
                 end
             end
 

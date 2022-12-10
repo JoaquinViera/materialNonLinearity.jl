@@ -1,5 +1,5 @@
 
-function assembler(Section, MaterialModel, Mesh, Uₖ, intBool, σArr, time)
+function assembler(Section, MaterialModel, Mesh, Uₖ, intBool, σArr, time, StressArraySets)
 
     ndofs = 3 # degrees of freedom per node
     nnodes = size(Mesh.nodesMat, 1)
@@ -31,7 +31,7 @@ function assembler(Section, MaterialModel, Mesh, Uₖ, intBool, σArr, time)
 
         # Internal force & Tangent mat
         if intBool == 1
-            Finteb, Fintea, σArr, KTeb, KTea = finte_KT_int(ElemMaterial, l, ElemSecParams, UₖeL, intBool, σArr, time, i)
+            Finteb, Fintea, σArr, KTeb, KTea = finte_KT_int(ElemMaterial, l, ElemSecParams, UₖeL, intBool, σArr, time, i, StressArraySets)
             # Assemble tangent stiffness matrix
             #KTₖ[elemdofs, elemdofs] = KTₖ[elemdofs, elemdofs] + R * KTe * R'
             #KTₖ[dofsb, dofsb] = KTₖ[dofsb, dofsb] + R[dofsb, dofsb] * KTeb * R[dofsb, dofsb]'
@@ -40,7 +40,7 @@ function assembler(Section, MaterialModel, Mesh, Uₖ, intBool, σArr, time)
             KTₖ[dofsae, dofsae] = KTₖ[dofsae, dofsae] + R[dofsa, dofsa] * KTea * R[dofsa, dofsa]'
 
         else
-            Finteb, Fintea, σArr = finte_KT_int(ElemMaterial, l, ElemSecParams, UₖeL, intBool, σArr, time, i)
+            Finteb, Fintea, σArr = finte_KT_int(ElemMaterial, l, ElemSecParams, UₖeL, intBool, σArr, time, i, StressArraySets)
         end
 
         # Assemble internal force
