@@ -201,6 +201,8 @@ struct PlotSettings
     lw::Int64
     ms::Int64
     color::String
+    minorGridBool::Int64
+    legendPosition::Symbol
 end
 
 # ============================================================================
@@ -235,7 +237,8 @@ mutable struct ModelSol
     Fintk::Vector{Float64}
     matUk::Vector{Vector{Float64}}
     matFext::Vector{Vector{Float64}}
-    matFint::Array{Float64}
+    # matFint::Array{Float64}
+    matFint::Vector{Vector{Matrix{Float64}}}
     freeDofs::Vector{Int64}
     loadFactors::Vector{Float64}
 end

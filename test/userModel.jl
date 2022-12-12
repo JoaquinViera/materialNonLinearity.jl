@@ -105,14 +105,6 @@ scalingProjection = 1 #
 # Numerical method settings struct
 StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
 
-# Plot parameters
-# =======================================
-lw = 3
-ms = 2
-color = "black"
-
-strPlots = PlotSettings(lw, ms, color)
-
 # Stress Array
 # =======================================
 elems = []
@@ -136,11 +128,11 @@ matFint = sol.matFint
 matUk = sol.matUk
 
 # Clamped node
-nod = 1
-dofM = nod * 3
+elem = 1
+dofM = 3
 
 # Reaction Bending moment 
-mVec = matFint[dofM, :]
+mVec = hcat([i[dofM] for i in matFint[elem]])
 
 # Compute curvatures
 # --------------------------------

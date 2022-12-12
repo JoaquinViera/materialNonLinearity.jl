@@ -18,9 +18,6 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
 
     σArr = [[zeros(MaterialModel.ns) for _ in 1:nTimes] for _ in StressArraySets.elems]
 
-    #σe = [[] for _ in StressArraySets.elems]
-    #σe = [[zeros(4) for _ in 1:2] for _ in 1:2]
-
     while nTimes > time
         # Sets current disp Vector
         Uₖ = ModelSol.matUk[time]
@@ -41,13 +38,13 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
             # Updates displacement iter
             dispIter += 1
             # Computes Tangent Stiffness Matrix KTₖ & Internal Forces
-            Fintₖ, σArr, KTₖ = assembler(Section, MaterialModel, Mesh, Uₖ, 1, σArr, time, StressArraySets)
+            Fintₖ, σArr, matFint, KTₖ = assembler(Section, MaterialModel, Mesh, Uₖ, 1, σArr, time, StressArraySets, ModelSol.matFint)
 
             # Computes Uₖ & δUₖ
             Uₖ, δUₖ, λₖ, currδu = step!(AnalysisSettings, Uₖ, ModelSol, KTₖ, Fintₖ, time, U, dispIter, varFext, currδu, convδu, c, λₖ)
 
             # Computes Fintₖ at computed Uₖ
-            Fintₖ, σArr = assembler(Section, MaterialModel, Mesh, Uₖ, 0, σArr, time, StressArraySets)
+            Fintₖ, σArr, matFint = assembler(Section, MaterialModel, Mesh, Uₖ, 0, σArr, time, StressArraySets, ModelSol.matFint)
 
             # Computes Fext
             ModelSol.Fextk = compute_Fext!(AnalysisSettings, varFext, λₖ, time, ModelSol.Fextk)
@@ -56,6 +53,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
             cond, convIter = convergence_check(Uₖ[ModelSol.freeDofs], δUₖ, ModelSol.Fextk[ModelSol.freeDofs], Fintₖ[ModelSol.freeDofs], AnalysisSettings, dispIter, time)
 
             # Stores results if convergence
+
             if convIter == 1
                 ModelSol, IterData = store_sol(time, ModelSol, IterData, Uₖ, δUₖ, Fintₖ, λₖ, cond)
             end

@@ -1,7 +1,7 @@
 
 # Bending moment plot
 
-function BendingMomentPlot(ndivs, nelems, matUk, timesPlot, Mesh, Section, MaterialModel)
+function BendingMomentPlot(ndivs, nelems, matUk, timesPlot, Mesh, Section, MaterialModel, PlotSettings)
 
     ndofs = 3
     rotXYXZ = Diagonal(ones(4, 4))
@@ -9,7 +9,9 @@ function BendingMomentPlot(ndivs, nelems, matUk, timesPlot, Mesh, Section, Mater
     rotXYXZ[4, 4] = -1
     dofsbe = [2, 3, 5, 6]
 
-    fig = plot()
+    title = "Bending Moment"
+    label = "M(x)"
+    fig = plot(minorgrid=PlotSettings.minorGridBool, legend=PlotSettings.legendPosition, title=title)
     for i in timesPlot
         for j = 1:nelems
             nodeselem = Mesh.conecMat[j, ndofs]
@@ -26,9 +28,15 @@ function BendingMomentPlot(ndivs, nelems, matUk, timesPlot, Mesh, Section, Mater
                 κₑ = (Bₑ*UₖₑL)[1]
                 Mₑ[m] = -κₑ * MaterialModel.E * Section.Iy
             end
-            plot!(fig, xₑ, Mₑ)
+            println(Mₑ[m])
+            if j != nelems
+                plot!(fig, xₑ, Mₑ, color=PlotSettings.color, lw=PlotSettings.lw, ms=PlotSettings.ms, label="")
+            else
+                plot!(fig, xₑ, Mₑ, color=PlotSettings.color, lw=PlotSettings.lw, ms=PlotSettings.ms, label=label)
+            end
+            xlabel!("x")
+            ylabel!("M")
         end
     end
-
     return fig
 end

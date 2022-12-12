@@ -88,13 +88,12 @@ StrStressArray = StressArraySets(elems, xG_Rel_Ind)
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName, StrStressArray)
+sol, time, IterData, stress = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName, StrStressArray)
 
 # Check 
 P = abs(Fz)
 Iy = StrSections.Iy
 A = StrSections.A
-l = 1
 
 # Check First step
 # --------------------------------
@@ -108,25 +107,31 @@ Man = -P * L
 matFint = sol.matFint
 matUk = sol.matUk
 
-nod = 1
-dofM = nod * 3
+elem = 1
+dofM = 3
 dofD = nnodes * 3 - 1
 dofT = nnodes * 3
 
-mVec = matFint[dofM, :]
+mVec = matFint[elem]
 
-Mnum = mVec[2]
+Mnum = mVec[2][dofM]
 δNum = matUk[2][dofD]
 θNum = matUk[2][dofT]
 
 # Check stiffness matrix
-Uke = zeros(6)
 rotXYXZ = Diagonal(ones(4, 4))
 rotXYXZ[2, 2] = -1
 rotXYXZ[4, 4] = -1
 
-Finteb, Fintea, σArr, KTeb, KTea = finte_KT_int(StrMaterialModels, l, [b, h], Uke, 1, [], 1, 1, StrStressArray)
+matUk = sol.matUk
+elem = 2
+nodeselem = Conec[elem, 3]
+dofselem = nodes2dofs(nodeselem, 3)
+Uke = matUk[end][dofselem]
 
+Finteb, Fintea, σArr, KTeb, KTea = finte_KT_int(StrMaterialModels, 0.5, [b, h], Uke, 1, [], 2, elem, StrStressArray)
+
+l = 0.5
 Kbending = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2] * rotXYXZ
 Kaxial = E * A / l * [1 -1; -1 1]
 
@@ -159,13 +164,12 @@ StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda
 # Process model parameters
 # ===============================================
 
-sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName, StrStressArray)
+sol, time, IterData, stress = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName, StrStressArray)
 
 # Check 
 P = abs(Fz) * abs(sol.loadFactors[2])
 Iy = StrSections.Iy
 A = StrSections.A
-l = 1
 
 # Check First step
 # --------------------------------
@@ -178,20 +182,20 @@ Man = -P * L
 matFint = sol.matFint
 matUk = sol.matUk
 
-nod = 1
-dofM = nod * 3
+elem = 1
+dofM = 3
 dofD = nnodes * 3 - 1
 dofT = nnodes * 3
 
-mVec = matFint[dofM, :]
+mVec = matFint[elem]
 
-Mnum = mVec[2]
+Mnum = mVec[2][dofM]
 δNum = matUk[2][dofD]
 θNum = matUk[2][dofT]
 
 # Check stiffness matrix
 matUk = sol.matUk
-elem = nnodes - 1
+elem = 2
 nodeselem = Conec[elem, 3]
 dofselem = nodes2dofs(nodeselem, 3)
 Uke = matUk[end][dofselem]
@@ -200,8 +204,9 @@ rotXYXZ = Diagonal(ones(4, 4))
 rotXYXZ[2, 2] = -1
 rotXYXZ[4, 4] = -1
 
-Finteb, Fintea, σArr, KTeb, KTea = finte_KT_int(StrMaterialModels, l, [b, h], Uke, 1, [], 1, 1, StrStressArray)
+Finteb, Fintea, σArr, KTeb, KTea = finte_KT_int(StrMaterialModels, 0.5, [b, h], Uke, 1, [], 2, elem, StrStressArray)
 
+l = 0.5
 Kbending = rotXYXZ * E * Iy / l^3 * [12 6l -12 6l; 6l 4l^2 -6l 2l^2; -12 -6l 12 -6l; 6l 2l^2 -6l 4l^2] * rotXYXZ
 Kaxial = E * A / l * [1 -1; -1 1]
 
