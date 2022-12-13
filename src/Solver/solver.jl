@@ -12,12 +12,14 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
     # Counters
     time = 1
     nTimes = IterData.nTimes
-
+    # Progress bar
     pbar = Progress(nTimes, dt=0.25, barglyphs=BarGlyphs("[=> ]"), barlen=35, color=:cyan)
+    # Auxiliar vars
     aux = zeros(length(ModelSol.freeDofs))
-
+    loadFactor = 0
+    loadFactors = zeros(nTimes) # aux vector to compute AL load factors
+    # Stress array
     σArr = [[zeros(MaterialModel.ns) for _ in 1:nTimes] for _ in StressArraySets.elems]
-    loadFactor = zeros(nTimes)
 
     while nTimes > time
         # Sets current disp Vector
@@ -25,7 +27,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
         convδu = ModelSol.convδu[time]
         currδu = aux
 
-        # increment external force
+        # Increment external force
         time > 1 ? λₖ = view(ModelSol.loadFactors, time)[1] : λₖ = 0.0
         ModelSol.matFext[time] = ModelSol.Fextk
 
@@ -49,12 +51,13 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
 
             # Computes Fext
             ModelSol.Fextk, loadFactor = compute_Fext!(AnalysisSettings, varFext, λₖ, time, ModelSol.Fextk, loadFactor)
-
+            # aux2 = aux2 + λₖ
             # Check convergence
             cond, convIter = convergence_check(Uₖ[ModelSol.freeDofs], δUₖ, ModelSol.Fextk[ModelSol.freeDofs], Fintₖ[ModelSol.freeDofs], AnalysisSettings, dispIter, time)
 
             # Stores results if convergence
             if convIter == 1
+                loadFactors[time+1] = loadFactor
                 ModelSol, IterData = store_sol(time, ModelSol, IterData, Uₖ, δUₖ, λₖ, cond)
             end
 
@@ -62,10 +65,9 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
         # Updates time
         time += 1
         next!(pbar)
-        # time > nTimes ? ModelSol.loadFactors = loadFactor : nothing
     end
 
-    ModelSol.loadFactors = loadFactor
+    ModelSol.loadFactors = loadFactors
 
     println("\n")
 

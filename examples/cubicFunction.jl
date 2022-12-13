@@ -109,14 +109,6 @@ scalingProjection = 1 #
 # Numerical method settings struct
 StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
 
-# Plot parameters
-# =======================================
-lw = 3
-ms = 2
-color = "black"
-
-strPlots = PlotSettings(lw, ms, color)
-
 # Stress Array
 # =======================================
 elems = [1, nnodes - 1]
@@ -143,21 +135,22 @@ matUk = sol.matUk
 
 # Clamped node
 nod = 1
-dofM = nod * 3
+elem = 1
+dofM = 3
 
 # Loaded node
 dofD = nnodes * 3 - 1
 dofT = nnodes * 3
 
-# Reaction Bending moment 
-mVec = matFint[dofM, :]
+# Applied loads
+pVec = sol.loadFactors * P
 
 # Reaction Bending moment 
-mVec = matFint[dofM, :]
-println(mVec[end])
+mVec = hcat([i[dofM] for i in matFint[elem]])
+
+# Displacements at loaded node
 dVec = hcat([i[dofD] for i in matUk])
 tVec = hcat([i[dofT] for i in matUk])
-pVec = abs.(mVec / L)
 
 # Compute curvature κ
 # --------------------------------
@@ -181,11 +174,15 @@ kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
 # maxErrMk = maximum(err)
 # println(maxErrMk)
 
+# Plots  
+# --------------------------------
+lw = 3
+ms = 2
+figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
+
 # M-κ plot  
 # --------------------------------
-
 p, w = gausslegendre(ns)
-figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
 
 elem = 1
 fig = plot(abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)

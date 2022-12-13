@@ -146,15 +146,6 @@ scalingProjection = 1 #
 # Numerical method settings struct
 StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
 
-
-# Plot parameters
-# =======================================
-lw = 3
-ms = 2
-color = "black"
-
-strPlots = PlotSettings(lw, ms, color)
-
 # Stress Array
 # =======================================
 elems = [1, nnodes - 1]
@@ -183,23 +174,36 @@ matUk = sol.matUk
 
 # Clamped node
 nod = 1
-dofM = nod * 3
+elem = 1
+dofM = 3
 
 # Loaded node
 dofD = nnodes * 3 - 1
 dofT = nnodes * 3
 
+# Applied loads
+pVec = sol.loadFactors * P
+
 # Reaction Bending moment 
-mVec = matFint[dofM, :]
-println(mVec[end])
+mVec = hcat([i[dofM] for i in matFint[elem]])
+
+# Displacements at loaded node
 dVec = hcat([i[dofD] for i in matUk])
-pVec = abs.(mVec / L)
 
 # Compute curvatures
 # --------------------------------
 kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
 
-p, w = gausslegendre(ns)
+# Plot parameters
+# =======================================
+lw = 3
+ms = 2
+color = "black"
+minorGridBool = 1
+legend_pos = :topright
+
+StrPlots = PlotSettings(lw, ms, color, minorGridBool, legend_pos)
+
 figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
 
 # M-κ plot  
@@ -221,6 +225,7 @@ savefig(fig2, "$(figspath)ejemplo4P-d.png")
 
 # Stress plot  
 # --------------------------------
+p, w = gausslegendre(ns)
 
 sfig = plot(σArr[1][convert(Int, ceil(nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(nLoadSteps / 5))]), minorgrid=1, draw_arrow=1, legend=:bottomright)
 plot!(sfig, σArr[1][convert(Int, ceil(2 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(2 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
@@ -239,3 +244,12 @@ plot!(sfig2, σArr[end][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, titl
 plot!(sfig2, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="", color=:"black")
 
 savefig(sfig2, "$(figspath)ejemplo4stress2.png")
+
+# Bending moment plot
+# --------------------------------
+ndivs = 2
+timesPlot = [50, 100, 200, 250, nLoadSteps]
+
+include("../src/Utils/plots.jl")
+
+figsM = BendingMomentPlot(timesPlot, StrMesh, StrPlots, matFint)

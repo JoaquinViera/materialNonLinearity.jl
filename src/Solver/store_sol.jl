@@ -6,5 +6,4 @@ function store_sol(time, ModelSol, IterData, Uₖ, δUₖ, λₖ, cond)
     IterData.stopCrit[time] = cond
 
     return ModelSol, IterData
-
 end

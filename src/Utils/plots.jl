@@ -1,7 +1,7 @@
 
 # Bending moment plot
 
-function BendingMomentPlot(timesPlot, Mesh, PlotSettings, matM)
+function BendingMomentPlot(timesPlot, Mesh, PlotSettings, matFinte)
 
     ndofs = 3
     dofsM = [3, 6]
@@ -17,7 +17,7 @@ function BendingMomentPlot(timesPlot, Mesh, PlotSettings, matM)
         for j = 1:nelems
             nodeselem = Mesh.conecMat[j, ndofs]
             xₑ = [Mesh.nodesMat[nodeselem[1], 1], Mesh.nodesMat[nodeselem[2], 1]]
-            Mₑ = abs.(matM[j][i][dofsM])
+            Mₑ = abs.(matFinte[j][i][dofsM])
 
             if j != nelems
                 plot!(fig, xₑ, Mₑ, color=PlotSettings.color, lw=PlotSettings.lw, ms=PlotSettings.ms, label="")
@@ -34,7 +34,7 @@ end
 
 # Deformed shape ----- TO DO
 
-# function DeformedShape(ndivs, nelems, matUk, timesPlot, Mesh, Section, MaterialModel, PlotSettings, matM)
+# function DeformedShape(ndivs, nelems, matUk, timesPlot, Mesh, Section, MaterialModel, PlotSettings, matFinte)
 
 #     ndofs = 3
 #     rotXYXZ = Diagonal(ones(4, 4))
@@ -56,7 +56,7 @@ end
 # xₑ = collect(Mesh.nodesMat[nodeselem[1], 1]:l/ndivs:Mesh.nodesMat[nodeselem[2], 1])
 # xplot = collect(0:l/ndivs:l)
 # Mₑ = zeros(length(xₑ))
-# Mₑ = abs.(matM[j][i][dofsM])
+# Mₑ = abs.(matFinte[j][i][dofsM])
 
 # for m in 1:length(xₑ)
 #     Bₑ = intern_function(xplot[m], l) * rotXYXZ
