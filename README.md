@@ -2,11 +2,19 @@
 
 ## Introduction
 
-FEM code to analyze 2D Euler Bernoulli beams with linear and nonlinear constitutive laws such as
+FEM code to analyze 2D Euler Bernoulli beams with linear and nonlinear constitutive laws. 
+
+## Standard constitutive laws
+
+Implemented isotropic constitutive laws are:
 
 * Linear elastic
 * Elastic perfectly plastic
-* Isotropic linear hardening
+* Linear hardening / softening
+
+## User defined constitutive laws
+
+User can define a constitutive law defined by any kind of function. Examples of a cubic function with softening and a concrete with softening in compression and tension branches are provided.
 
 | **Documentation** | **Tests** | **Coverage** | **License** |
 |:-----------------:|:---------------:|:------------:|:------------:|
