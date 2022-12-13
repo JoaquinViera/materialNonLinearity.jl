@@ -33,12 +33,14 @@ function initial_defs(Mesh, BoundaryConds, AnalysisSettings, name)
     matUₖ = Vector{Vector{Float64}}(undef, nTimes) # Matrix to store disps
     matUₖ[1] = Uₖ
 
-    #matFext = vcat(Fextk, []) # Matrix to store applied external forces
     matFext = Vector{Vector{Float64}}(undef, nTimes) # Matrix to store applied external forces
     matFext[1] = Fextk
-    matFint = vcat(Fintk, []) # Matrix to store interal forces 
 
 
+    nelems = size(Mesh.conecMat, 1)
+    # matFint = vcat(Fintk, []) # Matrix to store interal forces 
+
+    matFint = [[zeros(ndofs * 2, 1) for _ in 1:nTimes] for _ in 1:nelems]
 
     # Supports
     fixed_dofs = []
@@ -59,7 +61,6 @@ function initial_defs(Mesh, BoundaryConds, AnalysisSettings, name)
 
     δUₖ = Vector{Vector{Float64}}(undef, nTimes)
     δUₖ[1] = zeros(length(free_dofs))
-
 
     loadFactors = Vector{Float64}(undef, nTimes)
     loadFactors[1] = 0.0

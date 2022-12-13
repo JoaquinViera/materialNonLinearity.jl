@@ -67,14 +67,6 @@ nodalForces = [nod Fx Fz My]
 # BoundaryConds struct
 StrBoundaryConds = BoundaryConds(supps, nodalForces)
 
-# Plot parameters
-# =======================================
-lw = 3
-ms = 2
-color = "black"
-
-strPlots = PlotSettings(lw, ms, color)
-
 # Stress Array
 # =======================================
 elems = []
@@ -116,15 +108,13 @@ Iy = StrSections.Iy
 matFint = sol.matFint
 matUk = sol.matUk
 
-nod = 1
-dofM = nod * 3
-
-mVec = matFint[dofM, :]
+elem = 1
+dofM = 3
+mVec = hcat([i[dofM] for i in matFint[elem]])
 
 # Computes curvatures
 # --------------------------------
 kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
-
 
 # Analytical solution M-κ
 # --------------------------------
@@ -134,7 +124,6 @@ C = E * K / (E + K)
 εY = σY0 / E
 ε⃰ = εY - σY0 / C
 κ⃰ = 2 * ε⃰ / h
-elem = 1
 for i in 1:nLoadSteps
     κₖ = abs(kappaHistElem[elem, i])
     if κₖ <= κe
@@ -181,10 +170,9 @@ Iy = StrSections.Iy
 matFint = sol.matFint
 matUk = sol.matUk
 
-nod = 1
-dofM = nod * 3
-
-mVec = matFint[dofM, :]
+elem = 1
+dofM = 3
+mVec = hcat([i[dofM] for i in matFint[elem]])
 
 # Computes curvatures
 # --------------------------------
@@ -198,7 +186,6 @@ C = E * K / (E + K)
 εY = σY0 / E
 ε⃰ = εY - σY0 / C
 κ⃰ = 2 * ε⃰ / h
-elem = 1
 for i in 1:nLoadSteps
     κₖ = abs(kappaHistElem[elem, i])
     if κₖ <= κe

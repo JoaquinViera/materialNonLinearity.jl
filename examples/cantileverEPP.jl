@@ -32,7 +32,8 @@ StrSections = Rectangle(; b, h)
 
 # Nodes
 L = 1
-nnodes = 101
+# nnodes = 101
+nnodes = 3
 xcoords = collect(LinRange(0, L, nnodes))
 #t = 0:1/(nnodes-1):1
 #xcoords = t .^ 1.5 * L
@@ -81,6 +82,7 @@ initialDeltaLambda = 1e-2 #
 arcLengthIncrem = vcat(ones(18) * 1e-3, ones(80) * 1e-4) # 21 nodes
 arcLengthIncrem = vcat(ones(28) * 1e-3, ones(23) * 1e-4, ones(200) * 1e-5) # 51 nodes
 arcLengthIncrem = vcat(ones(39) * 1e-3, ones(21) * 1e-4, ones(30) * 1e-5) # 101 nodes
+arcLengthIncrem = vcat(ones(3) * 1e-3) # prueba
 
 nLoadSteps = length(arcLengthIncrem) # Number of load increments
 #nLoadSteps = 1 # Number of load increments
@@ -90,13 +92,7 @@ scalingProjection = 1 #
 # Numerical method settings struct
 StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
 
-# Plot parameters
-# =======================================
-lw = 3
-ms = 2
-color = "black"
 
-strPlots = PlotSettings(lw, ms, color)
 
 # Stress Array
 # =======================================
@@ -134,15 +130,16 @@ matUk = sol.matUk
 
 # Clamped node
 nod = 1
-dofM = nod * 3
+elem = 1
+dofM = 3
 
 # Loaded node
 dofD = nnodes * 3 - 1
 dofT = nnodes * 3
 
 # Reaction Bending moment 
-mVec = matFint[dofM, :]
-Mnum = mVec[2]
+mVec = hcat([i[dofM] for i in matFint[elem]])
+# Mnum = mVec[2]
 
 # Displacements at loaded node
 #deltaNum = matUk[dofD, 2]
@@ -188,7 +185,17 @@ end
 
 My = σY * b * h^2 / 6
 
-# M-κ plot  
+# Plot parameters
+# =======================================
+lw = 3
+ms = 2
+color = "black"
+minorGridBool = 1
+legend_pos = :topright
+
+strPlots = PlotSettings(lw, ms, color, minorGridBool, legend_pos)
+
+# M-κ plot
 # --------------------------------
 
 fig = plot(abs.(kappaHistElem[elem, :]), Mana, markershape=:circle, lw=lw, ms=ms, title="M-κ", label="Analytic", minorgrid=1, draw_arrow=1, legend=:bottomright)
@@ -200,6 +207,23 @@ savefig(fig, "ejemplo3M-k.png")
 
 err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
 maxErrMk = maximum(err)
+
+# Bending moment plot
+# --------------------------------
+
+using Plots
+include("../src/Utils/plots.jl")
+
+ndivs = 2
+timesPlot = [1, nLoadSteps]
+
+mVec = matFint[:]
+dofM = 3
+# mVec = hcat([i[dofM] for i in matFint[elem]])
+
+figsM = BendingMomentPlot(timesPlot, StrMesh, strPlots, matFint)
+
+stop
 #=
 # convergence analysis
 κₚ = 0.4 # 1/m

@@ -1,5 +1,5 @@
 
-function assembler(Section, MaterialModel, Mesh, Uₖ, intBool, σArr, time, StressArraySets)
+function assembler(Section, MaterialModel, Mesh, Uₖ, intBool, σArr, time, StressArraySets, F)
 
     ndofs = 3 # degrees of freedom per node
     nnodes = size(Mesh.nodesMat, 1)
@@ -46,12 +46,13 @@ function assembler(Section, MaterialModel, Mesh, Uₖ, intBool, σArr, time, Str
         # Assemble internal force
         Fintₖ[dofsbe] = Fintₖ[dofsbe] + R[dofsb, dofsb] * Finteb
         Fintₖ[dofsae] = Fintₖ[dofsae] + R[dofsa, dofsa] * Fintea
-
+        F[i][time+1][dofsb] = Finteb
+        F[i][time+1][dofsa] = Fintea
     end
 
     if intBool == 1
-        return Fintₖ, σArr, KTₖ
+        return Fintₖ, σArr, F, KTₖ
     else
-        return Fintₖ, σArr
+        return Fintₖ, σArr, F
     end
 end
