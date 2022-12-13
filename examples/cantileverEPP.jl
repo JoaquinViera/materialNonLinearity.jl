@@ -32,8 +32,7 @@ StrSections = Rectangle(; b, h)
 
 # Nodes
 L = 1
-# nnodes = 101
-nnodes = 3
+nnodes = 101
 xcoords = collect(LinRange(0, L, nnodes))
 #t = 0:1/(nnodes-1):1
 #xcoords = t .^ 1.5 * L
@@ -82,17 +81,12 @@ initialDeltaLambda = 1e-2 #
 arcLengthIncrem = vcat(ones(18) * 1e-3, ones(80) * 1e-4) # 21 nodes
 arcLengthIncrem = vcat(ones(28) * 1e-3, ones(23) * 1e-4, ones(200) * 1e-5) # 51 nodes
 arcLengthIncrem = vcat(ones(39) * 1e-3, ones(21) * 1e-4, ones(30) * 1e-5) # 101 nodes
-arcLengthIncrem = vcat(ones(3) * 1e-3) # prueba
-
 nLoadSteps = length(arcLengthIncrem) # Number of load increments
-#nLoadSteps = 1 # Number of load increments
 controlDofs = [6] #
 scalingProjection = 1 #
 
 # Numerical method settings struct
 StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
-
-
 
 # Stress Array
 # =======================================
@@ -107,22 +101,12 @@ StrStressArray = StressArraySets(elems, xG_Rel_Ind)
 
 sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName, StrStressArray)
 
-
 println(IterData.stopCrit)
-#using BenchmarkTools
-
-#@btime solver($StrSections, $StrMaterialModels, $StrMesh, $StrBoundaryConds, $StrAnalysisSettings, problemName)
 
 # Post process
 # --------------------------------
 P = abs(Fz)
 Iy = StrSections.Iy
-
-# Analytical solution
-Man = P * L
-fan = P * L^3 / (3 * E * Iy)
-theta_an = P * L^2 / (2 * E * Iy)
-kappae = 2 * σY / (E * h)
 
 # Numerical solution
 matFint = sol.matFint
@@ -139,11 +123,8 @@ dofT = nnodes * 3
 
 # Reaction Bending moment 
 mVec = hcat([i[dofM] for i in matFint[elem]])
-# Mnum = mVec[2]
 
 # Displacements at loaded node
-#deltaNum = matUk[dofD, 2]
-#thetaNum = matUk[dofT, 2]
 #=
 dVec = abs.(matUk[dofD, :])
 factors = sol.loadFactors
@@ -155,29 +136,30 @@ for i in 2:(length(factors))
     pVec[i] = factors[i] + pVec[i-1]
 end
 =#
+dVec = hcat([i[dofD] for i in matUk])
+
 # Compute curvatures
 # --------------------------------
-
 kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
 
 # Analytical solution M-κ
 # --------------------------------
-
 Mana = zeros(nLoadSteps)
+κₑ = 2 * σY / (E * h)
 C = E * K / (E + K)
 epsY = σY / E
 eps_ast = epsY - σY / C
 kappa_ast = 2 * eps_ast / h
 elem = 1
 for i in 1:nLoadSteps
-    kappak = abs(kappaHistElem[elem, i])
-    if kappak <= kappae
-        Mana[i] = E * StrSections.Iy * kappak
-    elseif kappak <= kappa_ast
-        Mana[i] = σY * b * h^2 / 12 * (3 - kappae^2 / kappak^2 + kappak / kappae * C / E * (2 - 3 * kappae / kappak + kappae^3 / kappak^3))
+    κₖ = abs(kappaHistElem[elem, i])
+    if κₖ <= κₑ
+        Mana[i] = E * StrSections.Iy * κₖ
+    elseif κₖ <= kappa_ast
+        Mana[i] = σY * b * h^2 / 12 * (3 - κₑ^2 / κₖ^2 + κₖ / κₑ * C / E * (2 - 3 * κₑ / κₖ + κₑ^3 / κₖ^3))
     else
-        zy = epsY / kappak
-        z0 = eps_ast / kappak
+        zy = epsY / κₖ
+        z0 = eps_ast / κₖ
         zs = z0 - zy
         Mana[i] = 2 * zy^2 * σY * b / 3 + zs * σY * b * (zy + (z0 - zy) / 3)
     end
@@ -195,35 +177,38 @@ legend_pos = :topright
 
 strPlots = PlotSettings(lw, ms, color, minorGridBool, legend_pos)
 
+figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
+
 # M-κ plot
 # --------------------------------
-
 fig = plot(abs.(kappaHistElem[elem, :]), Mana, markershape=:circle, lw=lw, ms=ms, title="M-κ", label="Analytic", minorgrid=1, draw_arrow=1, legend=:bottomright)
 plot!(fig, abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:rect, lw=lw, ms=ms, label="FEM")
 xlabel!("κ")
 ylabel!("M")
 
-savefig(fig, "ejemplo3M-k.png")
+savefig(fig, "$(figspath)ejemplo3M-k.png")
 
 err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
 maxErrMk = maximum(err)
 
+# P-δ plot  
+# --------------------------------
+fig2 = plot(dVec, pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1)
+xlabel!("δ")
+ylabel!("P")
+
+savefig(figPdelta, "$(figspath)ejemplo3P-d.png")
+
 # Bending moment plot
 # --------------------------------
-
-using Plots
-include("../src/Utils/plots.jl")
-
 ndivs = 2
 timesPlot = [1, nLoadSteps]
-
 mVec = matFint[:]
-dofM = 3
-# mVec = hcat([i[dofM] for i in matFint[elem]])
+
+include("../src/Utils/plots.jl")
 
 figsM = BendingMomentPlot(timesPlot, StrMesh, strPlots, matFint)
 
-stop
 #=
 # convergence analysis
 κₚ = 0.4 # 1/m
@@ -234,10 +219,10 @@ idx = maximum(findall(x -> x <= δκ, (abs.(kappaVecElem .- κₚ))))
 kappa_i = kappaVecElem[idx]
 M_i = abs(mVec[idx])
 
-if kappa_i <= kappae
+if kappa_i <= κₑ
     M_a = E * StrSections.Iy * kappa_i
 elseif kappa_i <= kappa_ast
-    M_a = σY * b * h^2 / 12 * (3 - kappae^2 / kappa_i^2 + kappa_i / kappae * C / E * (2 - 3 * kappae / kappa_i + kappae^3 / kappa_i^3))
+    M_a = σY * b * h^2 / 12 * (3 - κₑ^2 / kappa_i^2 + kappa_i / κₑ * C / E * (2 - 3 * κₑ / kappa_i + κₑ^3 / kappa_i^3))
 else
     zy = epsY / kappa_i
     z0 = eps_ast / kappa_i
@@ -252,15 +237,9 @@ println(M_i)
 println(M_a)
 println(err)
 =#
-# P-δ plot  
-# --------------------------------
-figPdelta = plot(dVec, pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1)
-xlabel!("δ")
-ylabel!("P")
 
-savefig(figPdelta, "ejemplo3P-d.png")
 
-# mNum & kappa
+# mNum & κ
 
 mNum = "mNum10.txt"
 f = open(mNum, "w")
@@ -271,8 +250,8 @@ end
 
 close(f)
 
-kappa = "kappa10.txt"
-f = open(kappa, "w")
+κ = "kappa10.txt"
+f = open(κ, "w")
 
 for i in kappaHistElem[elem, :]
     println(f, i)

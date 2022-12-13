@@ -1,4 +1,4 @@
-function store_sol(time, ModelSol, IterData, Uₖ, δUₖ, Fintₖ, λₖ, cond)
+function store_sol(time, ModelSol, IterData, Uₖ, δUₖ, λₖ, cond)
 
     ModelSol.matUk[time+1] = Uₖ
     ModelSol.convδu[time+1] = δUₖ

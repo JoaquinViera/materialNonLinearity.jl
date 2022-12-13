@@ -17,6 +17,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
     aux = zeros(length(ModelSol.freeDofs))
 
     σArr = [[zeros(MaterialModel.ns) for _ in 1:nTimes] for _ in StressArraySets.elems]
+    loadFactor = zeros(nTimes)
 
     while nTimes > time
         # Sets current disp Vector
@@ -25,10 +26,10 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
         currδu = aux
 
         # increment external force
-        time > 1 ? λₖ = view(ModelSol.loadFactors, time)[1] : λₖ = 0
+        time > 1 ? λₖ = view(ModelSol.loadFactors, time)[1] : λₖ = 0.0
         ModelSol.matFext[time] = ModelSol.Fextk
 
-        ModelSol.Fextk = compute_Fext!(AnalysisSettings, varFext, 0.0, time, ModelSol.Fextk)
+        ModelSol.Fextk, loadFactor = compute_Fext!(AnalysisSettings, varFext, 0.0, time, ModelSol.Fextk, loadFactor)
 
         # Iters
         dispIter = 0 # iter counter
@@ -47,23 +48,24 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
             Fintₖ, σArr, matFint = assembler(Section, MaterialModel, Mesh, Uₖ, 0, σArr, time, StressArraySets, ModelSol.matFint)
 
             # Computes Fext
-            ModelSol.Fextk = compute_Fext!(AnalysisSettings, varFext, λₖ, time, ModelSol.Fextk)
+            ModelSol.Fextk, loadFactor = compute_Fext!(AnalysisSettings, varFext, λₖ, time, ModelSol.Fextk, loadFactor)
 
             # Check convergence
             cond, convIter = convergence_check(Uₖ[ModelSol.freeDofs], δUₖ, ModelSol.Fextk[ModelSol.freeDofs], Fintₖ[ModelSol.freeDofs], AnalysisSettings, dispIter, time)
 
             # Stores results if convergence
-
             if convIter == 1
-                ModelSol, IterData = store_sol(time, ModelSol, IterData, Uₖ, δUₖ, Fintₖ, λₖ, cond)
+                ModelSol, IterData = store_sol(time, ModelSol, IterData, Uₖ, δUₖ, λₖ, cond)
             end
 
         end
         # Updates time
         time += 1
         next!(pbar)
-
+        # time > nTimes ? ModelSol.loadFactors = loadFactor : nothing
     end
+
+    ModelSol.loadFactors = loadFactor
 
     println("\n")
 
