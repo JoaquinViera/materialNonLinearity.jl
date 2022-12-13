@@ -130,15 +130,16 @@ matUk = sol.matUk
 
 # Clamped node
 nod = 1
-dofM = nod * 3
+elem = 1
+dofM = 3
 
 # Loaded node
 dofD = nnodes * 3 - 1
 dofT = nnodes * 3
 
 # Reaction Bending moment 
-mVec = matFint[dofM, :]
-Mnum = mVec[2]
+mVec = hcat([i[dofM] for i in matFint[elem]])
+# Mnum = mVec[2]
 
 # Displacements at loaded node
 #deltaNum = matUk[dofD, 2]
@@ -190,7 +191,7 @@ lw = 3
 ms = 2
 color = "black"
 minorGridBool = 1
-legend_pos = :bottomright
+legend_pos = :topright
 
 strPlots = PlotSettings(lw, ms, color, minorGridBool, legend_pos)
 
@@ -214,11 +215,13 @@ using Plots
 include("../src/Utils/plots.jl")
 
 ndivs = 2
-timesPlot = [nLoadSteps]
+timesPlot = [1, nLoadSteps]
 
-M = matFint[3:ndofs:end, timesPlot]
+mVec = matFint[:]
+dofM = 3
+# mVec = hcat([i[dofM] for i in matFint[elem]])
 
-# figm = BendingMomentPlot(ndivs, nelems, matUk, timesPlot, StrMesh, StrSections, StrMaterialModels, strPlots)
+figsM = BendingMomentPlot(timesPlot, StrMesh, strPlots, matFint)
 
 stop
 #=

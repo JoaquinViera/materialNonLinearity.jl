@@ -110,7 +110,6 @@ matUk = sol.matUk
 
 elem = 1
 dofM = 3
-
 mVec = hcat([i[dofM] for i in matFint[elem]])
 
 # Computes curvatures
