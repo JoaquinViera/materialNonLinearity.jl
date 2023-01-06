@@ -161,6 +161,8 @@ My = σY * b * h^2 / 6
 
 # Plot parameters
 # =======================================
+include("../src/Utils/plots.jl")
+
 lw = 3
 ms = 2
 color = "black"
@@ -170,6 +172,9 @@ legend_pos = :topright
 StrPlots = PlotSettings(lw, ms, color, minorGridBool, legend_pos)
 
 figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
+
+# Constitutive model plot
+SEfig = ConstitutiveModelPlot(StrMaterialModels, [-epsY * 3, epsY * 3], 50, 1000.0, 1e-3)
 
 # M-κ plot
 # --------------------------------

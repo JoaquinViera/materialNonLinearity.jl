@@ -196,7 +196,6 @@ kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
 
 # Plot parameters
 # =======================================
-include("../src/Utils/plots.jl")
 lw = 3
 ms = 2
 color = "black"
@@ -206,10 +205,6 @@ legend_pos = :topright
 StrPlots = PlotSettings(lw, ms, color, minorGridBool, legend_pos)
 
 figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
-
-# Constitutive model plot
-epsY = σY / E
-SEfig = ConstitutiveModelPlot(StrMaterialModels, [-epsY * 3, epsY * 3], 50, 1000.0, 1e-3)
 
 # M-κ plot  
 # --------------------------------
@@ -254,5 +249,7 @@ savefig(sfig2, "$(figspath)ejemplo4stress2.png")
 # --------------------------------
 ndivs = 2
 timesPlot = [50, 100, 200, 250, nLoadSteps]
+
+include("../src/Utils/plots.jl")
 
 figsM = BendingMomentPlot(timesPlot, StrMesh, StrPlots, matFint)

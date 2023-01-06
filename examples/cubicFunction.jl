@@ -176,9 +176,15 @@ kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
 
 # Plots  
 # --------------------------------
+include("../src/Utils/plots.jl")
+
 lw = 3
 ms = 2
 figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
+
+# Constitutive model plot
+epsY = σY / E
+SEfig = ConstitutiveModelPlot(StrMaterialModels, [-epsY * 3, epsY * 3], 50, 1000.0, 1e-3)
 
 # M-κ plot  
 # --------------------------------

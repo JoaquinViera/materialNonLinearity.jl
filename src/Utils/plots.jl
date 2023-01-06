@@ -32,7 +32,7 @@ function BendingMomentPlot(timesPlot, Mesh, PlotSettings, matFinte)
     return figsMat
 end
 
-# Deformed shape ----- TO DO
+# Deformed shape plot ----- TO DO
 
 # function DeformedShape(ndivs, nelems, matUk, timesPlot, Mesh, Section, MaterialModel, PlotSettings, matFinte)
 
@@ -75,3 +75,25 @@ end
 #     end
 #     return fig
 # end
+
+# Constitutive model plot
+function ConstitutiveModelPlot(model, ε::Vector, divs::Integer, factor_ε::Float64, factor_σ::Float64)
+    ε_min, ε_max = (maximum(ε), minimum(ε))
+    ε_Vector = LinRange(ε_min, ε_max, divs)
+
+    title = "Constitutive Model σ-ε"
+    fig = plot(minorgrid=1, title=title)
+    σ_Vector = zeros(length(ε_Vector))
+
+    for i in 1:length(ε_Vector)
+        σ, nothing = constitutive_model(model, ε_Vector[i])
+        σ_Vector[i] = σ
+    end
+    plot!(fig, ε_Vector * factor_ε, σ_Vector * factor_σ, color="blue", lw=3, ms=2, legend=false)
+    plot!(fig, [0.0, 0.0], [-maximum(abs.(σ_Vector)), maximum(abs.(σ_Vector))] * factor_σ, lw=1.5, ms=1, label="", color=:"black")
+    plot!(fig, [minimum(ε_Vector), maximum(ε_Vector)] * factor_ε, [0.0, 0.0], lw=1.5, ms=1, label="", color=:"black")
+    # =zeros(length(ε_Vector))
+    xlabel!("ε")
+    ylabel!("σ")
+    return fig
+end
