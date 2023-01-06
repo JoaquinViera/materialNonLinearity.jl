@@ -6,73 +6,71 @@
 using materialNonLinearity, Plots, LinearAlgebra, FastGaussQuadrature, Printf
 
 # example name
-problemName = "Concrete"
+problemName = "FRConcrete"
 
 # Define material model
 # =======================================
-E = 28e6
-σY = 3e3
-K = -E
+E = 28e6 # kN/m2
+# Tension
+# ---------------
+# Tramo 1
+fctd = 1.97 * 1000 # kN/m2
+epsf = 0.06 / 1000
+# Tramo 2
+fctR1d = 0.75 * 1000 # kN/m2
+eps1 = 0.16 / 1000
+# Tramo 3
+fctR3d = 0.52 * 1000 # kN/m2
+eps2 = 12.5 / 1000
+# Tramo 4
+fctlim = 0.38 * 1000 # kN/m2
+epslim = 20 / 1000
+
+# Gauss points
 ne = 20
 ns = 20
-
-
 
 import materialNonLinearity: constitutive_model
 
 # Materials struct
 StrMaterialModels = UserModel(ne, ns)
 
-
 function constitutive_model(ElemMaterialModel::UserModel, εₖ)
-    fck = 30 # MPa
+
     E = 28e6 # kN/m2
-    fctmfl = 3e3 # kN/m2
-    yc = 1.5
-    fcd = fck / yc
+    # Tension
+    # ---------------
+    # Tramo 1
+    fctd = 1.97 * 1000 # kN/m2
+    epsf = 0.06 / 1000
+    # Tramo 2
+    fctR1d = 0.75 * 1000 # kN/m2
+    eps1 = 0.16 / 1000
+    # Tramo 3
+    fctR3d = 0.52 * 1000 # kN/m2
+    eps2 = 12.5 / 1000
+    # Tramo 4
+    fctlim = 0.38 * 1000 # kN/m2
+    epslim = 20 / 1000
 
     # Tension
-    eps1 = fctmfl / E
-    K = -E
-
-    # Compression
-    if fck <= 50
-        epsc0 = 2e-3
-        epscu = 3.5e-3
-        n = 2
-    else
-        epsc0 = 2e-3 + 0.000085 * (fck - 50)^(0.50)
-        epscu = 0.0026 + 0.0144 * ((100 - fck) / 100)^4
-        n = 1.4 + 9.6 * ((100 - fck) / 100)^4
-    end
-
     if εₖ >= 0.0
-        # Tension
-        if εₖ <= eps1
+        if εₖ <= epsf # Tramo 1
             σ = E * εₖ
             ∂σ∂ε = E
-        else
-            if εₖ >= eps1 * (1 - E / K)
-                σ = 0.0
-                ∂σ∂ε = 0.0
-                # println("n")
-            else
-                σ = fctmfl + K * (εₖ - eps1)
-                ∂σ∂ε = K
-            end
+        elseif εₖ <= eps1 # Tramo 2
+            ∂σ∂ε = (fctR1d - fctd) / (eps1 - epsf)
+            σ = ∂σ∂ε * (εₖ - epsf) + fctd
+        elseif εₖ <= eps2 # Tramo 3
+            ∂σ∂ε = (fctR3d - fctR1d) / (eps2 - eps1)
+            σ = ∂σ∂ε * (εₖ - eps1) + fctR1d
+        elseif εₖ <= epslim # Tramo 4
+            ∂σ∂ε = (fctlim - fctR3d) / (epslim - eps2)
+            σ = ∂σ∂ε * (εₖ - eps2) + fctR3d
+        elseif εₖ > epslim # Rotura
+            error("Collapse")
         end
-        #Compression
-    else
-        #epsc = abs(εₖ)
-        #=
-                if epsc <= epsc0
-                    σ = -fcd * (1 - (1 - epsc / epsc0) .^ n) * 1000
-                    ∂σ∂ε = fcd * n * (1 - epsc / epsc0) .^ (n - 1) / epsc0 * 1000
-                else
-                    σ = -fcd * 1000
-                    ∂σ∂ε = 0
-                end
-        =#
+    else #Compression
         σ = E * εₖ
         ∂σ∂ε = E
     end
@@ -153,6 +151,10 @@ xG_Rel_Ind = 0
 
 StrStressArray = StressArraySets(elems, xG_Rel_Ind)
 
+# Constitutive model plot
+include("../src/Utils/plots.jl")
+SEfig = ConstitutiveModelPlot(StrMaterialModels, [-epslim / 300, epslim], 1000, 1000.0, 1e-3)
+stop
 # ===============================================
 # Process model parameters
 # ===============================================

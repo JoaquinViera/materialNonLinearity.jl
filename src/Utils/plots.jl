@@ -32,7 +32,7 @@ function BendingMomentPlot(timesPlot, Mesh, PlotSettings, matFinte)
     return figsMat
 end
 
-# Deformed shape plot ----- TO DO
+# Deformed shape plot
 
 function DeformedShapePlot(timesPlot, Mesh, PlotSettings, matUk)
 
@@ -95,7 +95,6 @@ function ConstitutiveModelPlot(model, ε::Vector, divs::Integer, factor_ε::Floa
     plot!(fig, ε_Vector * factor_ε, σ_Vector * factor_σ, color="blue", lw=3, ms=2, legend=false)
     plot!(fig, [0.0, 0.0], [-maximum(abs.(σ_Vector)), maximum(abs.(σ_Vector))] * factor_σ, lw=1.5, ms=1, label="", color=:"black")
     plot!(fig, [minimum(ε_Vector), maximum(ε_Vector)] * factor_ε, [0.0, 0.0], lw=1.5, ms=1, label="", color=:"black")
-    # =zeros(length(ε_Vector))
     xlabel!("ε")
     ylabel!("σ")
     return fig
