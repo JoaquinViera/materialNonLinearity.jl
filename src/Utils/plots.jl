@@ -34,47 +34,50 @@ end
 
 # Deformed shape plot ----- TO DO
 
-# function DeformedShape(ndivs, nelems, matUk, timesPlot, Mesh, Section, MaterialModel, PlotSettings, matFinte)
+function DeformedShapePlot(timesPlot, Mesh, PlotSettings, matUk)
 
-#     ndofs = 3
-#     rotXYXZ = Diagonal(ones(4, 4))
-#     rotXYXZ[2, 2] = -1
-#     rotXYXZ[4, 4] = -1
-#     dofsbe = [2, 3, 5, 6]
-#     dofsM = [3, 6]
+    ndivs = 10
+    ndofs = 3
+    rotXYXZ = Diagonal(ones(4, 4))
+    rotXYXZ[2, 2] = -1
+    rotXYXZ[4, 4] = -1
+    dofsbe = [2, 3, 5, 6]
+    # dofsM = [3, 6]
+    nelems = size(Mesh.conecMat, 1)
 
-#     title = "Deformed Shape"
-#     label = "v(x)"
-#     fig = plot(minorgrid=PlotSettings.minorGridBool, legend=PlotSettings.legendPosition, title=title)
-#     for i in timesPlot
-#         for j = 1:nelems
-#             nodeselem = Mesh.conecMat[j, ndofs]
-#             elemdofs = nodes2dofs(nodeselem[:], ndofs)
-#             R, l = element_geometry(view(Mesh.nodesMat, nodeselem[1], :), view(Mesh.nodesMat, nodeselem[2], :), ndofs)
-#             UₖₑL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
+    figsMat = Array{Plots.Plot{Plots.GRBackend},1}()
 
-# xₑ = collect(Mesh.nodesMat[nodeselem[1], 1]:l/ndivs:Mesh.nodesMat[nodeselem[2], 1])
-# xplot = collect(0:l/ndivs:l)
-# Mₑ = zeros(length(xₑ))
-# Mₑ = abs.(matFinte[j][i][dofsM])
+    label = "v(x)"
+    for i in timesPlot
+        title = "Deformed Shape"
+        fig = plot(minorgrid=PlotSettings.minorGridBool, legend=PlotSettings.legendPosition, title=title)
+        for j = 1:nelems
+            nodeselem = Mesh.conecMat[j, ndofs]
+            elemdofs = nodes2dofs(nodeselem[:], ndofs)
+            R, l = element_geometry(view(Mesh.nodesMat, nodeselem[1], :), view(Mesh.nodesMat, nodeselem[2], :), ndofs)
+            UₖₑL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
 
-# for m in 1:length(xₑ)
-#     Bₑ = intern_function(xplot[m], l) * rotXYXZ
-#     κₑ = (Bₑ*UₖₑL)[1]
-#     Mₑ[m] = -κₑ * MaterialModel.E * Section.Iy
-# end
+            xₑ = collect(Mesh.nodesMat[nodeselem[1], 1]:l/ndivs:Mesh.nodesMat[nodeselem[2], 1])
+            xplot = collect(0:l/ndivs:l)
+            vₑ = zeros(length(xₑ))
 
-# if j != nelems
-# plot!(fig, xₑ, Mₑ, color=PlotSettings.color, lw=PlotSettings.lw, ms=PlotSettings.ms, label="")
-# else
-# plot!(fig, xₑ, Mₑ, color=PlotSettings.color, lw=PlotSettings.lw, ms=PlotSettings.ms, label=label)
-#             end
-#             xlabel!("x")
-#             ylabel!("v")
-#         end
-#     end
-#     return fig
-# end
+            for m in 1:length(xₑ)
+                Nₑ = intern_function(xplot[m], l, 0) * rotXYXZ
+                vₑ[m] = (Nₑ*UₖₑL)[1]
+            end
+
+            if j != nelems
+                plot!(fig, xₑ, vₑ, color=PlotSettings.color, lw=PlotSettings.lw, ms=PlotSettings.ms, label="")
+            else
+                plot!(fig, xₑ, vₑ, color=PlotSettings.color, lw=PlotSettings.lw, ms=PlotSettings.ms, label=label)
+            end
+            xlabel!("x")
+            ylabel!("v")
+        end
+        push!(figsMat, fig)
+    end
+    return figsMat
+end
 
 # Constitutive model plot
 function ConstitutiveModelPlot(model, ε::Vector, divs::Integer, factor_ε::Float64, factor_σ::Float64)

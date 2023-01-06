@@ -39,7 +39,7 @@ function frame_curvature(nelems, Mesh, len, matUk)
         nodeselem = Mesh.conecMat[j, ndofs]
         elemdofs = nodes2dofs(nodeselem[:], ndofs)
         R, l = element_geometry(view(Mesh.nodesMat, nodeselem[1], :), view(Mesh.nodesMat, nodeselem[2], :), ndofs)
-        Bₑ = intern_function(0, l) * rotXYXZ
+        Bₑ = intern_function(0, l, 2) * rotXYXZ
         for i in 1:len
             UₖₑL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
             κHistElem[j, i] = (Bₑ*UₖₑL)[1]
@@ -48,11 +48,20 @@ function frame_curvature(nelems, Mesh, len, matUk)
     return κHistElem
 end
 
-function intern_function(x, l)
-    N1 = (12x - 6l) / l^3
-    N2 = (6x - 4l) / l^2
-    N3 = -(12x - 6l) / l^3
-    N4 = (6x - 2l) / l^2
+function intern_function(x, l, deriv)
+    if deriv == 0
+        N1 = (2 * x .^ 3 - 3 * l * x .^ 2 + l .^ 3) / l^3
+        N2 = (x .^ 3 - 2 * l * x .^ 2 + l .^ 2 * x) / l^2
+        N3 = -(2 * x .^ 3 - 3 * l * x .^ 2) / l^3
+        N4 = (x .^ 3 - l * x .^ 2) / l^2
+    elseif deriv == 1
+
+    elseif deriv == 2
+        N1 = (12x - 6l) / l^3
+        N2 = (6x - 4l) / l^2
+        N3 = -(12x - 6l) / l^3
+        N4 = (6x - 2l) / l^2
+    end
     f = [N1 N2 N3 N4]
     return f
 end

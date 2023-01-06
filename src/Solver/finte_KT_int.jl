@@ -58,7 +58,7 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time
         # Axial interpolation functions first derivative
         Ba = intern_function_a(pge, l)
         # Bending interpolation functions second derivative
-        Bb = intern_function(pge, l) * rotXYXZ
+        Bb = intern_function(pge, l, 2) * rotXYXZ
 
         # Strain array
         εₖVec = -pgsVec * Bb * Ub .+ Ba * Ua

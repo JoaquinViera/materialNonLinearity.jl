@@ -173,6 +173,14 @@ StrPlots = PlotSettings(lw, ms, color, minorGridBool, legend_pos)
 
 figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
 
+# Deformed shape plot
+ndivs = 2
+timesPlot = [1, nLoadSteps]
+
+include("../src/Utils/plots.jl")
+
+figsD = DeformedShapePlot(timesPlot, StrMesh, StrPlots, matUk)
+stop
 # Constitutive model plot
 SEfig = ConstitutiveModelPlot(StrMaterialModels, [-epsY * 3, epsY * 3], 50, 1000.0, 1e-3)
 
