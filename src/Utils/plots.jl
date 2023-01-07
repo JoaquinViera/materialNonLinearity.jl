@@ -17,8 +17,9 @@ function BendingMomentPlot(timesPlot, Mesh, PlotSettings, matFinte)
         for j = 1:nelems
             nodeselem = Mesh.conecMat[j, ndofs]
             xₑ = [Mesh.nodesMat[nodeselem[1], 1], Mesh.nodesMat[nodeselem[2], 1]]
-            Mₑ = abs.(matFinte[j][i][dofsM])
-
+            Mₑ = matFinte[j][i][dofsM]
+            Mₑ[2] = -Mₑ[2] # Sign adjustment
+            Mₑ = -Mₑ # Drawing convention
             if j != nelems
                 plot!(fig, xₑ, Mₑ, color=PlotSettings.color, lw=PlotSettings.lw, ms=PlotSettings.ms, label="")
             else

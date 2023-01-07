@@ -20,6 +20,7 @@ ns = 16 # section
 
 # Materials struct
 StrMaterialModels = IsotropicBiLinear(E, σY, K, ne, ns)
+StrMaterialModels = LinearElastic(E, ne, ns)
 
 # Define section
 # =======================================
@@ -33,11 +34,14 @@ StrSections = Rectangle(; b, h)
 # =======================================
 
 # Nodes
-L = 1
-nnodes = 21
+L = 1.5
+nnodes = 3 * 4 + 1
 xcoords = collect(LinRange(0, L, nnodes))
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
+
+nod1 = convert(Integer, (nnodes - 1) / 3 + 1)
+nod2 = convert(Integer, nnodes - nod1 + 1)
 
 # Conec
 elemConec = []
@@ -63,8 +67,8 @@ supps = [1 Inf Inf Inf; nnodes Inf Inf Inf]
 Fx = 0
 Fz = -1
 My = 0
-nod = (nnodes + 1) / 2
-nodalForces = [nod Fx Fz My]
+# nod = (nnodes + 1) / 2
+nodalForces = [nod1 Fx Fz My; nod2 Fx Fz My]
 
 # BoundaryConds struct
 StrBoundaryConds = BoundaryConds(supps, nodalForces)
@@ -76,16 +80,26 @@ tolk = 50 # number of iters
 tolu = 1e-7 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
 
-initialDeltaLambda = 1e-2 #
+initialDeltaLambda = 1e-5 #
 
-arcLengthIncrem = vcat(ones(18) * 1e-3, ones(80) * 1e-4) # 21 node
-arcLengthIncrem = vcat(ones(18) * 1e-3) # 21 node
+# arcLengthIncrem = vcat(ones(18) * 1e-3, ones(80) * 1e-4) # 21 node
+arcLengthIncrem = vcat(ones(2) * 1e-3) # 21 node
 nLoadSteps = length(arcLengthIncrem) # Number of load increments
-controlDofs = [6] #
+dof1 = nod1 * 3 - 1
+dof2 = nod2 * 3 - 1
+controlDofs = [dof1, dof2] #
 scalingProjection = 1 #
 
 # Numerical method settings struct
-StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
+# StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
+
+#
+nLoadSteps = 10 # Number of load increments
+loadFactorsVec = collect(1:nLoadSteps) # Load scaling factors
+
+# Numerical method settings struct
+StrAnalysisSettings = NewtonRaphson(tolk, tolu, tolf, loadFactorsVec)
+#
 
 # Stress Array
 # =======================================
@@ -111,20 +125,30 @@ Iy = StrSections.Iy
 matFint = sol.matFint
 matUk = sol.matUk
 
-# Clamped node
-nod = 1
-elem = 1
-dofM = 3
-
 # Loaded node
-dofD = nnodes * 3 - 1
-dofT = nnodes * 3
+dofD = nod1 * 3 - 1
+dofT = nod1 * 3
 
 # Applied loads
 pVec = sol.loadFactors * P
 
-# Reaction Bending moment 
-mVec = hcat([i[dofM] for i in matFint[elem]])
+# Bending moment at midspan of node 1
+elem = convert(Integer, nod1)
+dofM = 3
+mVec1 = hcat([i[dofM] for i in matFint[elem]])
+
+# Bending moment at midspan of node 2
+elem = convert(Integer, nod2)
+dofM = 3
+mVec2 = hcat([i[dofM] for i in matFint[elem]])
+
+# plots
+mVec = copy(mVec1)
+
+# Bending moment at support 
+elem = 1
+dofM = 3
+mR = hcat([i[dofM] for i in matFint[1]])
 
 # Displacements at loaded node
 dVec = hcat([i[dofD] for i in matUk])
@@ -132,6 +156,10 @@ dVec = hcat([i[dofD] for i in matUk])
 # Compute curvatures
 # --------------------------------
 kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
+
+# Analytical solution 
+# --------------------------------
+Msupp = 2 * pVec * L / 9
 
 # Analytical solution M-κ
 # --------------------------------
@@ -141,7 +169,7 @@ C = E * K / (E + K)
 epsY = σY / E
 eps_ast = epsY - σY / C
 kappa_ast = 2 * eps_ast / h
-elem = 1
+elem = convert(Integer, nod1)
 for i in 1:nLoadSteps
     κₖ = abs(kappaHistElem[elem, i])
     if κₖ <= κₑ
@@ -176,8 +204,6 @@ figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
 ndivs = 2
 timesPlot = [1, nLoadSteps]
 
-include("../src/Utils/plots.jl")
-
 figsD = DeformedShapePlot(timesPlot, StrMesh, StrPlots, matUk)
 
 # Constitutive model plot
@@ -190,7 +216,7 @@ plot!(fig, abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:rect, lw=lw, m
 xlabel!("κ")
 ylabel!("M")
 
-savefig(fig, "$(figspath)ejemplo3M-k.png")
+# savefig(fig, "$(figspath)ejemplo3M-k.png")
 
 err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
 maxErrMk = maximum(err)
@@ -201,13 +227,11 @@ fig2 = plot(abs.(dVec), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", l
 xlabel!("δ")
 ylabel!("P")
 
-savefig(fig2, "$(figspath)ejemplo3P-d.png")
+# savefig(fig2, "$(figspath)ejemplo3P-d.png")
 
 # Bending moment plot
 # --------------------------------
 ndivs = 2
 timesPlot = [1, nLoadSteps]
-
-include("../src/Utils/plots.jl")
 
 figsM = BendingMomentPlot(timesPlot, StrMesh, StrPlots, matFint)
