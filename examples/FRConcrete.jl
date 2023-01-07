@@ -10,7 +10,6 @@ problemName = "FRConcrete"
 
 # Define material model
 # =======================================
-E = 28e6 # kN/m2
 # Tension
 # ---------------
 # Tramo 1
@@ -26,9 +25,11 @@ eps2 = 12.5 / 1000
 fctlim = 0.38 * 1000 # kN/m2
 epslim = 20 / 1000
 
+E = fctd / epsf # kN/m2
+
 # Gauss points
 ne = 20
-ns = 20
+ns = 50
 
 import materialNonLinearity: constitutive_model
 
@@ -37,7 +38,6 @@ StrMaterialModels = UserModel(ne, ns)
 
 function constitutive_model(ElemMaterialModel::UserModel, εₖ)
 
-    E = 28e6 # kN/m2
     # Tension
     # ---------------
     # Tramo 1
@@ -52,6 +52,8 @@ function constitutive_model(ElemMaterialModel::UserModel, εₖ)
     # Tramo 4
     fctlim = 0.38 * 1000 # kN/m2
     epslim = 20 / 1000
+
+    E = fctd / epsf # kN/m2
 
     # Tension
     if εₖ >= 0.0
@@ -78,7 +80,6 @@ function constitutive_model(ElemMaterialModel::UserModel, εₖ)
     return σ, ∂σ∂ε
 
 end
-
 
 # Define section
 # =======================================
@@ -134,9 +135,8 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 tolk = 75 # number of iters
 tolu = 1e-10 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-initialDeltaLambda = 1e-5 #
-# arcLengthIncrem = vcat(ones(13) * 4e-5, ones(4) * 1e-5, ones(40) * 2e-6)  # compresion polinomica
-arcLengthIncrem = vcat(ones(13) * 4e-5, ones(4) * 1e-5, ones(40) * 2e-6, ones(250) * 1e-6)  # compresion polinomica
+initialDeltaLambda = 1e-7 #
+arcLengthIncrem = vcat(ones(30) * 1e-5, ones(100) * 3e-6)
 nLoadSteps = length(arcLengthIncrem)
 controlDofs = [6] #
 scalingProjection = 1 #
@@ -151,10 +151,6 @@ xG_Rel_Ind = 0
 
 StrStressArray = StressArraySets(elems, xG_Rel_Ind)
 
-# Constitutive model plot
-include("../src/Utils/plots.jl")
-SEfig = ConstitutiveModelPlot(StrMaterialModels, [-epslim / 300, epslim], 1000, 1000.0, 1e-3)
-stop
 # ===============================================
 # Process model parameters
 # ===============================================
@@ -167,6 +163,7 @@ println(IterData.stopCrit)
 # --------------------------------
 P = abs(Fz)
 Iy = StrSections.Iy
+σY = fctd
 Mfis = σY * Iy / (h / 2)
 println(Mfis)
 
@@ -198,6 +195,7 @@ kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
 
 # Plot parameters
 # =======================================
+include("../src/Utils/plots.jl")
 lw = 3
 ms = 2
 color = "black"
@@ -208,6 +206,10 @@ StrPlots = PlotSettings(lw, ms, color, minorGridBool, legend_pos)
 
 figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
 
+# Constitutive model plot
+
+SEfig = ConstitutiveModelPlot(StrMaterialModels, [-epslim / 300, epslim], 1000, 1000.0, 1e-3)
+# stop
 # M-κ plot  
 # --------------------------------
 elem = 1
@@ -215,7 +217,7 @@ fig = plot(abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:circle, lw=lw,
 xlabel!("κ")
 ylabel!("M")
 
-savefig(fig, "$(figspath)ejemplo4M-k.png")
+# savefig(fig, "$(figspath)ejemplo4M-k.png")
 
 # P-δ plot  
 # --------------------------------
@@ -223,35 +225,33 @@ fig2 = plot(abs.(dVec), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", l
 xlabel!("δ")
 ylabel!("P")
 
-savefig(fig2, "$(figspath)ejemplo4P-d.png")
+# savefig(fig2, "$(figspath)ejemplo4P-d.png")
 
 # Stress plot  
 # --------------------------------
 p, w = gausslegendre(ns)
 
-sfig = plot(σArr[1][convert(Int, ceil(nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(nLoadSteps / 5))]), minorgrid=1, draw_arrow=1, legend=:bottomright)
+sfig = plot(σArr[1][convert(Int, ceil(nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(nLoadSteps / 5))]), minorgrid=1, draw_arrow=1, legend=:topleft)
 plot!(sfig, σArr[1][convert(Int, ceil(2 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(2 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
 plot!(sfig, σArr[1][convert(Int, ceil(3 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(3 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
 plot!(sfig, σArr[1][convert(Int, ceil(4 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(4 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
 plot!(sfig, σArr[1][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
 plot!(sfig, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="", color=:"black")
 
-savefig(sfig, "$(figspath)ejemplo4stress1.png")
+# savefig(sfig, "$(figspath)ejemplo4stress1.png")
 
-sfig2 = plot(σArr[end][convert(Int, ceil(nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(nLoadSteps / 5))]), minorgrid=1, draw_arrow=1, legend=:bottomright)
+sfig2 = plot(σArr[end][convert(Int, ceil(nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(nLoadSteps / 5))]), minorgrid=1, draw_arrow=1, legend=:topleft)
 plot!(sfig2, σArr[end][convert(Int, ceil(2 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(2 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
 plot!(sfig2, σArr[end][convert(Int, ceil(3 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(3 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
 plot!(sfig2, σArr[end][convert(Int, ceil(4 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(4 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
 plot!(sfig2, σArr[end][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
 plot!(sfig2, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="", color=:"black")
 
-savefig(sfig2, "$(figspath)ejemplo4stress2.png")
+# savefig(sfig2, "$(figspath)ejemplo4stress2.png")
 
 # Bending moment plot
 # --------------------------------
 ndivs = 2
-timesPlot = [50, 100, 200, 250, nLoadSteps]
-
-include("../src/Utils/plots.jl")
+timesPlot = [1, 50]
 
 figsM = BendingMomentPlot(timesPlot, StrMesh, StrPlots, matFint)
