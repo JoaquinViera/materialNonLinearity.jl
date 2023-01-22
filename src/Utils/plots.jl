@@ -17,8 +17,9 @@ function BendingMomentPlot(timesPlot, Mesh, PlotSettings, matFinte)
         for j = 1:nelems
             nodeselem = Mesh.conecMat[j, ndofs]
             xₑ = [Mesh.nodesMat[nodeselem[1], 1], Mesh.nodesMat[nodeselem[2], 1]]
-            Mₑ = abs.(matFinte[j][i][dofsM])
-
+            Mₑ = matFinte[j][i][dofsM]
+            Mₑ[2] = -Mₑ[2] # Sign adjustment
+            Mₑ = -Mₑ # Drawing convention
             if j != nelems
                 plot!(fig, xₑ, Mₑ, color=PlotSettings.color, lw=PlotSettings.lw, ms=PlotSettings.ms, label="")
             else
@@ -32,7 +33,7 @@ function BendingMomentPlot(timesPlot, Mesh, PlotSettings, matFinte)
     return figsMat
 end
 
-# Deformed shape plot ----- TO DO
+# Deformed shape plot
 
 function DeformedShapePlot(timesPlot, Mesh, PlotSettings, matUk)
 
@@ -95,7 +96,6 @@ function ConstitutiveModelPlot(model, ε::Vector, divs::Integer, factor_ε::Floa
     plot!(fig, ε_Vector * factor_ε, σ_Vector * factor_σ, color="blue", lw=3, ms=2, legend=false)
     plot!(fig, [0.0, 0.0], [-maximum(abs.(σ_Vector)), maximum(abs.(σ_Vector))] * factor_σ, lw=1.5, ms=1, label="", color=:"black")
     plot!(fig, [minimum(ε_Vector), maximum(ε_Vector)] * factor_ε, [0.0, 0.0], lw=1.5, ms=1, label="", color=:"black")
-    # =zeros(length(ε_Vector))
     xlabel!("ε")
     ylabel!("σ")
     return fig

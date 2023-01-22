@@ -55,7 +55,10 @@ function intern_function(x, l, deriv)
         N3 = -(2 * x .^ 3 - 3 * l * x .^ 2) / l^3
         N4 = (x .^ 3 - l * x .^ 2) / l^2
     elseif deriv == 1
-
+        N1 = (6 * x .^ 2 - 6 * x * l) / l^3
+        N2 = (3 * x .^ 2 - 4 * l * x + l .^ 2) / l^2
+        N3 = -(6 * x .^ 2 - 6 * x * l) / l^3
+        N4 = (3 * x .^ 2 - 2 * l * x) / l^2
     elseif deriv == 2
         N1 = (12x - 6l) / l^3
         N2 = (6x - 4l) / l^2

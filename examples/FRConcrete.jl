@@ -6,73 +6,73 @@
 using materialNonLinearity, Plots, LinearAlgebra, FastGaussQuadrature, Printf
 
 # example name
-problemName = "Concrete"
+problemName = "FRConcrete"
 
 # Define material model
 # =======================================
-E = 28e6
-σY = 3e3
-K = -E
+# Tension
+# ---------------
+# Tramo 1
+fctd = 1.97 * 1000 # kN/m2
+epsf = 0.06 / 1000
+# Tramo 2
+fctR1d = 0.75 * 1000 # kN/m2
+eps1 = 0.16 / 1000
+# Tramo 3
+fctR3d = 0.52 * 1000 # kN/m2
+eps2 = 12.5 / 1000
+# Tramo 4
+fctlim = 0.38 * 1000 # kN/m2
+epslim = 20 / 1000
+
+E = fctd / epsf # kN/m2
+
+# Gauss points
 ne = 20
-ns = 20
-
-
+ns = 50
 
 import materialNonLinearity: constitutive_model
 
 # Materials struct
 StrMaterialModels = UserModel(ne, ns)
 
-
 function constitutive_model(ElemMaterialModel::UserModel, εₖ)
-    fck = 30 # MPa
-    E = 28e6 # kN/m2
-    fctmfl = 3e3 # kN/m2
-    yc = 1.5
-    fcd = fck / yc
 
     # Tension
-    eps1 = fctmfl / E
-    K = -E
+    # ---------------
+    # Tramo 1
+    fctd = 1.97 * 1000 # kN/m2
+    epsf = 0.06 / 1000
+    # Tramo 2
+    fctR1d = 0.75 * 1000 # kN/m2
+    eps1 = 0.16 / 1000
+    # Tramo 3
+    fctR3d = 0.52 * 1000 # kN/m2
+    eps2 = 12.5 / 1000
+    # Tramo 4
+    fctlim = 0.38 * 1000 # kN/m2
+    epslim = 20 / 1000
 
-    # Compression
-    if fck <= 50
-        epsc0 = 2e-3
-        epscu = 3.5e-3
-        n = 2
-    else
-        epsc0 = 2e-3 + 0.000085 * (fck - 50)^(0.50)
-        epscu = 0.0026 + 0.0144 * ((100 - fck) / 100)^4
-        n = 1.4 + 9.6 * ((100 - fck) / 100)^4
-    end
+    E = fctd / epsf # kN/m2
 
+    # Tension
     if εₖ >= 0.0
-        # Tension
-        if εₖ <= eps1
+        if εₖ <= epsf # Tramo 1
             σ = E * εₖ
             ∂σ∂ε = E
-        else
-            if εₖ >= eps1 * (1 - E / K)
-                σ = 0.0
-                ∂σ∂ε = 0.0
-                # println("n")
-            else
-                σ = fctmfl + K * (εₖ - eps1)
-                ∂σ∂ε = K
-            end
+        elseif εₖ <= eps1 # Tramo 2
+            ∂σ∂ε = (fctR1d - fctd) / (eps1 - epsf)
+            σ = ∂σ∂ε * (εₖ - epsf) + fctd
+        elseif εₖ <= eps2 # Tramo 3
+            ∂σ∂ε = (fctR3d - fctR1d) / (eps2 - eps1)
+            σ = ∂σ∂ε * (εₖ - eps1) + fctR1d
+        elseif εₖ <= epslim # Tramo 4
+            ∂σ∂ε = (fctlim - fctR3d) / (epslim - eps2)
+            σ = ∂σ∂ε * (εₖ - eps2) + fctR3d
+        elseif εₖ > epslim # Rotura
+            error("Collapse")
         end
-        #Compression
-    else
-        #epsc = abs(εₖ)
-        #=
-                if epsc <= epsc0
-                    σ = -fcd * (1 - (1 - epsc / epsc0) .^ n) * 1000
-                    ∂σ∂ε = fcd * n * (1 - epsc / epsc0) .^ (n - 1) / epsc0 * 1000
-                else
-                    σ = -fcd * 1000
-                    ∂σ∂ε = 0
-                end
-        =#
+    else #Compression
         σ = E * εₖ
         ∂σ∂ε = E
     end
@@ -80,7 +80,6 @@ function constitutive_model(ElemMaterialModel::UserModel, εₖ)
     return σ, ∂σ∂ε
 
 end
-
 
 # Define section
 # =======================================
@@ -136,9 +135,8 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 tolk = 75 # number of iters
 tolu = 1e-10 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-initialDeltaLambda = 1e-5 #
-# arcLengthIncrem = vcat(ones(13) * 4e-5, ones(4) * 1e-5, ones(40) * 2e-6)  # compresion polinomica
-arcLengthIncrem = vcat(ones(13) * 4e-5, ones(4) * 1e-5, ones(40) * 2e-6, ones(250) * 1e-6)  # compresion polinomica
+initialDeltaLambda = 1e-7 #
+arcLengthIncrem = vcat(ones(30) * 1e-5, ones(100) * 3e-6)
 nLoadSteps = length(arcLengthIncrem)
 controlDofs = [6] #
 scalingProjection = 1 #
@@ -165,6 +163,7 @@ println(IterData.stopCrit)
 # --------------------------------
 P = abs(Fz)
 Iy = StrSections.Iy
+σY = fctd
 Mfis = σY * Iy / (h / 2)
 println(Mfis)
 
@@ -196,6 +195,7 @@ kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
 
 # Plot parameters
 # =======================================
+include("../src/Utils/plots.jl")
 lw = 3
 ms = 2
 color = "black"
@@ -206,6 +206,14 @@ StrPlots = PlotSettings(lw, ms, color, minorGridBool, legend_pos)
 
 figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
 
+# Constitutive model plot
+
+SEfig = ConstitutiveModelPlot(StrMaterialModels, [-epslim / 300, epslim], 1000, 1000.0, 1e-3)
+
+savefig(SEfig, "$(figspath)ejemplo6sigma-epsilon.png")
+
+
+# stop
 # M-κ plot  
 # --------------------------------
 elem = 1
@@ -213,7 +221,7 @@ fig = plot(abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:circle, lw=lw,
 xlabel!("κ")
 ylabel!("M")
 
-savefig(fig, "$(figspath)ejemplo4M-k.png")
+savefig(fig, "$(figspath)ejemplo6M-k.png")
 
 # P-δ plot  
 # --------------------------------
@@ -221,35 +229,33 @@ fig2 = plot(abs.(dVec), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", l
 xlabel!("δ")
 ylabel!("P")
 
-savefig(fig2, "$(figspath)ejemplo4P-d.png")
+savefig(fig2, "$(figspath)ejemplo6P-d.png")
 
 # Stress plot  
 # --------------------------------
 p, w = gausslegendre(ns)
 
-sfig = plot(σArr[1][convert(Int, ceil(nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(nLoadSteps / 5))]), minorgrid=1, draw_arrow=1, legend=:bottomright)
+sfig = plot(σArr[1][convert(Int, ceil(nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(nLoadSteps / 5))]), minorgrid=1, draw_arrow=1, legend=:topleft)
 plot!(sfig, σArr[1][convert(Int, ceil(2 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(2 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
 plot!(sfig, σArr[1][convert(Int, ceil(3 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(3 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
 plot!(sfig, σArr[1][convert(Int, ceil(4 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(4 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
 plot!(sfig, σArr[1][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
 plot!(sfig, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="", color=:"black")
 
-savefig(sfig, "$(figspath)ejemplo4stress1.png")
+savefig(sfig, "$(figspath)ejemplo6stress1.png")
 
-sfig2 = plot(σArr[end][convert(Int, ceil(nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(nLoadSteps / 5))]), minorgrid=1, draw_arrow=1, legend=:bottomright)
+sfig2 = plot(σArr[end][convert(Int, ceil(nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(nLoadSteps / 5))]), minorgrid=1, draw_arrow=1, legend=:topleft)
 plot!(sfig2, σArr[end][convert(Int, ceil(2 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(2 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
 plot!(sfig2, σArr[end][convert(Int, ceil(3 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(3 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
 plot!(sfig2, σArr[end][convert(Int, ceil(4 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(4 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
 plot!(sfig2, σArr[end][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
 plot!(sfig2, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="", color=:"black")
 
-savefig(sfig2, "$(figspath)ejemplo4stress2.png")
+# savefig(sfig2, "$(figspath)ejemplo4stress2.png")
 
 # Bending moment plot
 # --------------------------------
 ndivs = 2
-timesPlot = [50, 100, 200, 250, nLoadSteps]
-
-include("../src/Utils/plots.jl")
+timesPlot = [1, 50]
 
 figsM = BendingMomentPlot(timesPlot, StrMesh, StrPlots, matFint)
