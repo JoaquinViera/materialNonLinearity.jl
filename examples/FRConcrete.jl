@@ -209,6 +209,10 @@ figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
 # Constitutive model plot
 
 SEfig = ConstitutiveModelPlot(StrMaterialModels, [-epslim / 300, epslim], 1000, 1000.0, 1e-3)
+
+savefig(SEfig, "$(figspath)ejemplo6sigma-epsilon.png")
+
+
 # stop
 # M-κ plot  
 # --------------------------------
@@ -217,7 +221,7 @@ fig = plot(abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:circle, lw=lw,
 xlabel!("κ")
 ylabel!("M")
 
-# savefig(fig, "$(figspath)ejemplo4M-k.png")
+savefig(fig, "$(figspath)ejemplo6M-k.png")
 
 # P-δ plot  
 # --------------------------------
@@ -225,7 +229,7 @@ fig2 = plot(abs.(dVec), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", l
 xlabel!("δ")
 ylabel!("P")
 
-# savefig(fig2, "$(figspath)ejemplo4P-d.png")
+savefig(fig2, "$(figspath)ejemplo6P-d.png")
 
 # Stress plot  
 # --------------------------------
@@ -238,7 +242,7 @@ plot!(sfig, σArr[1][convert(Int, ceil(4 * nLoadSteps / 5))], p * h / 2, markers
 plot!(sfig, σArr[1][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
 plot!(sfig, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="", color=:"black")
 
-# savefig(sfig, "$(figspath)ejemplo4stress1.png")
+savefig(sfig, "$(figspath)ejemplo6stress1.png")
 
 sfig2 = plot(σArr[end][convert(Int, ceil(nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(nLoadSteps / 5))]), minorgrid=1, draw_arrow=1, legend=:topleft)
 plot!(sfig2, σArr[end][convert(Int, ceil(2 * nLoadSteps / 5))], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[convert(Int, ceil(2 * nLoadSteps / 5))]), minorgrid=1, draw_arrow=1)
