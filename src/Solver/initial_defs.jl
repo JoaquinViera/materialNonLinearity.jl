@@ -4,10 +4,10 @@
 
 function initial_defs(Mesh, BoundaryConds, AnalysisSettings, name)
 
-    println(" \n==================================================")
-    println("Starting analysis.")
-    println("Running problem $name")
-    println("================================================== \n")
+    # println(" \n==================================================")
+    # println("Starting analysis.")
+    # println("Running problem $name")
+    # println("================================================== \n")
 
     ndofs = 3 # degrees of freedom per node
     nnodes = size(Mesh.nodesMat, 1)
