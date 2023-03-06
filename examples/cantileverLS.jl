@@ -76,11 +76,12 @@ tolk = 50 # number of iters
 tolu = 1e-7 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
 
-initialDeltaLambda = 1e-2 #
+initialDeltaLambda = 1e-5 #
 
 arcLengthIncrem = vcat(ones(18) * 1e-3, ones(80) * 1e-4) # 21 nodes
 arcLengthIncrem = vcat(ones(28) * 1e-3, ones(23) * 1e-4, ones(200) * 1e-5) # 51 nodes
 arcLengthIncrem = vcat(ones(39) * 1e-3, ones(21) * 1e-4, ones(30) * 1e-5) # 101 nodes
+# arcLengthIncrem = vcat(ones(40) * 1e-3, ones(120) * 1e-5) # 101 nodes
 nLoadSteps = length(arcLengthIncrem) # Number of load increments
 controlDofs = [6] #
 scalingProjection = 1 #
@@ -180,9 +181,11 @@ timesPlot = [1, nLoadSteps]
 include("../src/Utils/plots.jl")
 
 figsD = DeformedShapePlot(timesPlot, StrMesh, StrPlots, matUk)
-stop
+
 # Constitutive model plot
 SEfig = ConstitutiveModelPlot(StrMaterialModels, [-epsY * 3, epsY * 3], 50, 1000.0, 1e-3)
+
+savefig(SEfig, "$(figspath)ejemplo3sigma-epsilon.png")
 
 # M-κ plot
 # --------------------------------

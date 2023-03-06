@@ -251,11 +251,24 @@ plot!(sfig2, σArr[end][convert(Int, ceil(4 * nLoadSteps / 5))], p * h / 2, mark
 plot!(sfig2, σArr[end][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
 plot!(sfig2, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="", color=:"black")
 
-# savefig(sfig2, "$(figspath)ejemplo4stress2.png")
+savefig(sfig2, "$(figspath)ejemplo6stress2.png")
 
 # Bending moment plot
 # --------------------------------
 ndivs = 2
-timesPlot = [1, 50]
+timesPlot = [1, 130]
 
 figsM = BendingMomentPlot(timesPlot, StrMesh, StrPlots, matFint)
+
+savefig(figsM[end], "$(figspath)ejemplo6bending.png")
+
+# Deformed shape plot
+# --------------------------------
+ndivs = 2
+timesPlot = [1, 15, 30, 45, 60, 75, 90, 105, 130]
+
+figsD = DeformedShapePlot(timesPlot, StrMesh, StrPlots, matUk)
+
+figsDefs = plot(figsD[end], figsD[end-1], title="Deformed shapes")
+
+savefig(figsDefs, "$(figspath)ejemplo6deformed.png")

@@ -87,7 +87,7 @@ nLoadSteps = length(arcLengthIncrem) # Number of load increments
 dof1 = nod1 * 3 - 1
 dof2 = nod2 * 3 - 1
 controlDofs = [dof1, dof2] #
-scalingProjection = 1 #
+scalingProjection = -1 #
 
 # Numerical method settings struct
 # StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
@@ -222,6 +222,8 @@ timesPlot = [1, nLoadSteps]
 
 figsD = DeformedShapePlot(timesPlot, StrMesh, StrPlots, matUk)
 
+savefig(figsD[end], "$(figspath)ejemplo7deformed.png")
+
 # Constitutive model plot
 SEfig = ConstitutiveModelPlot(StrMaterialModels, [-epsY * 3, epsY * 3], 50, 1000.0, 1e-3)
 
@@ -232,11 +234,16 @@ plot!(fig, abs.(kappaHistElem[elem, :]), abs.(mVec) ./ My, markershape=:rect, lw
 xlabel!("κ")
 ylabel!("M")
 
+savefig(fig, "$(figspath)ejemplo7Mkvano.png")
+
+
 elem = 1
 fig2 = plot(abs.(kappaHistElem[elem, :]), ManaR ./ My, markershape=:circle, lw=lw, ms=ms, title="M-κ", label="Analytic", minorgrid=1, draw_arrow=1, legend=:bottomright)
 plot!(fig2, abs.(kappaHistElem[elem, :]), abs.(mR) ./ My, markershape=:rect, lw=lw, ms=ms, label="FEM")
 xlabel!("κ")
 ylabel!("M")
+
+savefig(fig2, "$(figspath)ejemplo7Mkapoyo.png")
 
 # savefig(fig, "$(figspath)ejemplo3M-k.png")
 
@@ -248,16 +255,19 @@ maxErrMk = maximum(err)
 fig3 = plot(abs.(dVec), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 xlabel!("δ")
 ylabel!("P")
+savefig(fig3, "$(figspath)ejemplo7Pd.png")
 
 # savefig(fig2, "$(figspath)ejemplo3P-d.png")
 
 # Bending moment plot
 # --------------------------------
 ndivs = 2
-timesPlot = [1, nLoadSteps]
+# timesPlot = [1, nLoadSteps]
+timesPlot = vcat(collect(1:20:nLoadSteps), nLoadSteps)
 
 figsM = BendingMomentPlot(timesPlot, StrMesh, StrPlots, matFint)
 
+savefig(figsM[end], "$(figspath)ejemplo7bending.png")
 
 # Stress plot  
 # --------------------------------
@@ -270,11 +280,17 @@ plot!(sfig, σArr[1][convert(Int, ceil(4 * nLoadSteps / 5))], p * h / 2, markers
 plot!(sfig, σArr[1][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mR[end]), minorgrid=1, draw_arrow=1)
 plot!(sfig, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="", color=:"black")
 
+savefig(sfig, "$(figspath)ejemplo7sigmaApoyo.png")
+
 # M- vs M+
 # --------------------------------
 figComp = plot(abs.(mVec), abs.(mR), markershape=:circle, lw=lw, ms=ms, title="M- vs M+", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 
+savefig(figComp, "$(figspath)ejemplo7MM.png")
+
 # P vs M-/M+
 # --------------------------------
-figComp2 = plot(abs.(mVec[2:end] ./ mR[2:end]), abs.(pVec[2:end]), markershape=:circle, lw=lw, ms=ms, title="P vs M-/M+", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+figComp2 = plot(abs.(pVec[1:end]), abs.(mVec[1:end]), markershape=:circle, lw=lw, ms=ms, title="P vs M-/M+", label="M+", minorgrid=1, draw_arrow=1, legend=:bottomright)
+plot!(figComp2, abs.(pVec[1:end]), abs.(mR[1:end]), markershape=:circle, lw=lw, ms=ms, label="M-", minorgrid=1, draw_arrow=1, legend=:bottomright, color=:green)
 
+savefig(figComp2, "$(figspath)ejemplo7Mred.png")

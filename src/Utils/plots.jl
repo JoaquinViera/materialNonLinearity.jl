@@ -8,7 +8,7 @@ function BendingMomentPlot(timesPlot, Mesh, PlotSettings, matFinte)
     nelems = size(Mesh.conecMat, 1)
 
     figsMat = Array{Plots.Plot{Plots.GRBackend},1}()
-
+    figSub = plot(minorgrid=PlotSettings.minorGridBool, legend=false, title="Bending moment")
     label = "M(x)"
     for i in timesPlot
         title = "Bending Moment, step $i"
@@ -27,8 +27,16 @@ function BendingMomentPlot(timesPlot, Mesh, PlotSettings, matFinte)
             end
             xlabel!("x")
             ylabel!("M")
+            if i == timesPlot[1]
+                plot!(figSub, xₑ, Mₑ, color=PlotSettings.color, lw=PlotSettings.lw, ms=PlotSettings.ms)
+            else
+                plot!(figSub, xₑ, Mₑ, color=PlotSettings.color, lw=PlotSettings.lw / 2, ms=PlotSettings.ms / 5, linestyle=:dash)
+            end
+            xlabel!("x")
+            ylabel!("M")
         end
         push!(figsMat, fig)
+        i == timesPlot[end] ? push!(figsMat, figSub) : nothing
     end
     return figsMat
 end
@@ -47,7 +55,7 @@ function DeformedShapePlot(timesPlot, Mesh, PlotSettings, matUk)
     nelems = size(Mesh.conecMat, 1)
 
     figsMat = Array{Plots.Plot{Plots.GRBackend},1}()
-
+    figSub = plot(minorgrid=PlotSettings.minorGridBool, legend=false, title="Deformed Shapes")
     label = "v(x)"
     for i in timesPlot
         title = "Deformed Shape"
@@ -74,8 +82,16 @@ function DeformedShapePlot(timesPlot, Mesh, PlotSettings, matUk)
             end
             xlabel!("x")
             ylabel!("v")
+            if i == timesPlot[1]
+                plot!(figSub, xₑ, vₑ, color=PlotSettings.color, lw=PlotSettings.lw, ms=PlotSettings.ms)
+            else
+                plot!(figSub, xₑ, vₑ, color=PlotSettings.color, lw=PlotSettings.lw / 2, ms=PlotSettings.ms / 5, linestyle=:dash)
+            end
+            xlabel!("x")
+            ylabel!("v")
         end
         push!(figsMat, fig)
+        i == timesPlot[end] ? push!(figsMat, figSub) : nothing
     end
     return figsMat
 end

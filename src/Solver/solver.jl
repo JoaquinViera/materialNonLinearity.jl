@@ -13,7 +13,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
     time = 1
     nTimes = IterData.nTimes
     # Progress bar
-    pbar = Progress(nTimes, dt=0.25, barglyphs=BarGlyphs("[=> ]"), barlen=35, color=:cyan)
+    # pbar = Progress(nTimes, dt=0.25, barglyphs=BarGlyphs("[=> ]"), barlen=35, color=:cyan)
     # Auxiliar vars
     aux = zeros(length(ModelSol.freeDofs))
     loadFactor = 0
@@ -64,17 +64,17 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
         end
         # Updates time
         time += 1
-        next!(pbar)
+        # next!(pbar)
     end
 
     ModelSol.loadFactors = loadFactors
 
-    println("\n")
+    # println("\n")
 
-    println("End.")
-    println("==================================================")
+    # println("End.")
+    # println("==================================================")
 
-    println("\n\n")
+    # println("\n\n")
 
     return ModelSol, time, IterData, σArr
 end
