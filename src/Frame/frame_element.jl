@@ -26,7 +26,7 @@ function element_geometry(cord1, cord2, ndofs)
     return R, l
 end
 
-function frame_curvature(nelems, Mesh, len, matUk)
+function frame_curvature(nelems, Mesh, len, matUk, xrel)
 
     ndofs = 3
     κHistElem = zeros(nelems, len)
@@ -39,7 +39,7 @@ function frame_curvature(nelems, Mesh, len, matUk)
         nodeselem = Mesh.conecMat[j, ndofs]
         elemdofs = nodes2dofs(nodeselem[:], ndofs)
         R, l = element_geometry(view(Mesh.nodesMat, nodeselem[1], :), view(Mesh.nodesMat, nodeselem[2], :), ndofs)
-        Bₑ = intern_function(0, l, 2) * rotXYXZ
+        Bₑ = intern_function(xrel[j], l, 2) * rotXYXZ
         for i in 1:len
             UₖₑL = R[dofsbe, dofsbe]' * matUk[i][elemdofs[dofsbe]]
             κHistElem[j, i] = (Bₑ*UₖₑL)[1]

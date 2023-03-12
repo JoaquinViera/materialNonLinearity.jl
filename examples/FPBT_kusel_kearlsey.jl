@@ -254,7 +254,8 @@ dVec = hcat([i[dofD] for i in matUk])
 # tVec = hcat([i[dofT] for i in matUk])
 # Compute curvatures
 # --------------------------------
-kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
+xrel = zeros(nelems)
+kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk, xrel)
 
 # Plot parameters
 # =======================================

@@ -154,7 +154,8 @@ tVec = hcat([i[dofT] for i in matUk])
 
 # Compute curvature κ
 # --------------------------------
-kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
+xrel = zeros(nelems)
+kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk, xrel)
 
 # Analytical solution M-κ
 # --------------------------------

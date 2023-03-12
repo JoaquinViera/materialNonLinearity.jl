@@ -115,7 +115,8 @@ pVec = sol.loadFactors * P
 
 # Computes curvatures
 # --------------------------------
-kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
+xrel = zeros(nelems)
+kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk, xrel)
 
 # Analytical solution M-κ
 # --------------------------------
