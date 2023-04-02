@@ -43,20 +43,23 @@ function step!(alg::ArcLength_Cylindrical, Uₖ, ModelSol, KTₖ, Fintk, time, U
         if norm(convδu) == 0
             δλ = alg.initialDeltaLambda
         else
+            # println(" $time")
             δλ = sign((convδu' * (arcLengthNorm .* δū))) * Δl / sqrt(δū' * (arcLengthNorm .* δū))
+            # println(sign((convδu' * (arcLengthNorm .* δū))))
         end
-    else # Cylindrical constraint method - De Souza Neto 
+    else # Cylindrical constraint method - De Souza Neto
+        # println(dispIter)
         a = δū' * (arcLengthNorm .* δū) # eq 4.117
         b = 2 * (currδu + δu⃰)' * (arcLengthNorm .* δū)
         c = (currδu + δu⃰)' * (arcLengthNorm .* (currδu + δu⃰)) - Δl^2
         d = b^2 - 4 * a * c
+        d < 0 ? error("Negative discriminant at time $time, reduce arc length increment.") : nothing
         λsol = -b / (2a) .+ sqrt(d) / (2a) * [-1; 1]
 
         verif = [(currδu + δu⃰ + λsol[1] * δū)' * (arcLengthNorm .* currδu)
             (currδu + δu⃰ + λsol[2] * δū)' * (arcLengthNorm .* currδu)]
 
         δλ = λsol[findall(x -> x == maximum(verif), verif)[1]]
-
     end
 
     δUₖ = δu⃰ + δλ * δū

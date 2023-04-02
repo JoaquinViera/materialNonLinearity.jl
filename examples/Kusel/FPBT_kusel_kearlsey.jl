@@ -167,25 +167,33 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 tolk = 75 # number of iters
 tolu = 1e-10 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
-initialDeltaLambda = 1e-6 #
+initialDeltaLambda = 1e-5 #
 
-arcLengthIncrem = vcat(ones(23) * 1e-5, ones(5) * 2e-5) # dips
-arcLengthIncrem = vcat(ones(23) * 1e-5, ones(9) * 2e-5) # dips
-arcLengthIncrem = vcat(ones(23) * 1e-5, ones(8) * 2e-5, ones(5) * 5e-5) # dips
-arcLengthIncrem = vcat(ones(23) * 1e-5, ones(8) * 2e-5, ones(4) * 5e-5, ones(3) * 2e-5, ones(2) * 9e-5) # dips
-arcLengthIncrem = vcat(ones(23) * 1e-5, ones(8) * 2e-5, ones(4) * 5e-5, ones(3) * 2e-5, ones(1) * 9e-5, ones(1) * 1e-5) # dips
-arcLengthIncrem = vcat(ones(5) * 5e-5, ones(5) * 9e-5) # dips
-arcLengthIncrem = vcat(ones(5) * 5e-5, ones(4) * 9e-5, ones(2) * 6e-4) # dips
-# arcLengthIncrem = vcat(ones(2) * 1e-5) # dips
-println(length(arcLengthIncrem))
-nLoadSteps = length(arcLengthIncrem)
+## Dominant dof 
+# arcLengthIncrem = vcat(ones(23) * 1e-5, ones(5) * 2e-5) # dips
+# arcLengthIncrem = vcat(ones(23) * 1e-5, ones(9) * 2e-5) # dips
+# arcLengthIncrem = vcat(ones(23) * 1e-5, ones(8) * 2e-5, ones(5) * 5e-5) # dips
+# arcLengthIncrem = vcat(ones(23) * 1e-5, ones(8) * 2e-5, ones(4) * 5e-5, ones(3) * 2e-5, ones(2) * 9e-5) # dips
+# arcLengthIncrem = vcat(ones(23) * 1e-5, ones(8) * 2e-5, ones(4) * 5e-5, ones(3) * 2e-5, ones(1) * 9e-5, ones(1) * 1e-5) # dips
+# arcLengthIncrem = vcat(ones(5) * 5e-5, ones(5) * 9e-5) # dips
+# arcLengthIncrem = vcat(ones(5) * 5e-5, ones(4) * 9e-5, ones(2) * 6e-4) # dips
+# # arcLengthIncrem = vcat(ones(2) * 1e-5) # dips
+# println(length(arcLengthIncrem))
+# nLoadSteps = length(arcLengthIncrem)
+# dof1 = (n1 + 1) * 3 - 1 # Uz
+# dof2 = (n2 + 1) * 3 - 1 # Uz
+# controlDofs = [dof1, dof2] #
+# scalingProjection = -1 #
+
+# Numerical method settings struct
+# StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
+
+arcLengthIncrem = vcat(ones(200) * 1e-6)
 dof1 = (n1 + 1) * 3 - 1 # Uz
 dof2 = (n2 + 1) * 3 - 1 # Uz
 controlDofs = [dof1, dof2] #
-scalingProjection = -1 #
-
-# Numerical method settings struct
-StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
+nLoadSteps = length(arcLengthIncrem)
+StrAnalysisSettings = ArcLength_Cylindrical(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs)
 
 # Stress Array
 # =======================================
