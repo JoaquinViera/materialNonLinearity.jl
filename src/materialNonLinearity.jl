@@ -39,7 +39,8 @@ include("Solver/store_sol.jl")
 # Newton Raphson
 include("Algorithms/NR.jl")
 # Arc Length
-include("Algorithms/AL.jl")
+include("Algorithms/AL_DD.jl")
+include("Algorithms/AL_Cylindrical.jl")
 # Convergence check
 include("Algorithms/convergence_check.jl")
 # Compute Fext

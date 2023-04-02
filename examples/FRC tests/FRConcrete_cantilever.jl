@@ -196,7 +196,7 @@ kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk, xrel)
 
 # Plot parameters
 # =======================================
-include("../src/Utils/plots.jl")
+include("../../src/Utils/plots.jl")
 lw = 3
 ms = 2
 color = "black"
@@ -205,7 +205,7 @@ legend_pos = :topright
 
 StrPlots = PlotSettings(lw, ms, color, minorGridBool, legend_pos)
 
-figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
+figspath = "..\\..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
 
 # Constitutive model plot
 

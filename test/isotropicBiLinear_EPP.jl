@@ -70,7 +70,7 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 # Stress Array
 # =======================================
 elems = []
-xG_Rel_Ind = 0
+xG_Rel_Ind = zeros(ne)
 
 StrStressArray = StressArraySets(elems, xG_Rel_Ind)
 
@@ -114,7 +114,8 @@ mVec = hcat([i[dofM] for i in matFint[elem]])
 
 # Computes curvatures
 # --------------------------------
-kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
+xrel = zeros(nelems)
+kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk, xrel)
 
 # Analytical solution M-κ
 # --------------------------------
@@ -136,7 +137,7 @@ end
 @test (maximum(abs.(abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end])) <= 1e-2
 
 # =======================================
-# AL test
+# AL test - dominant dof
 # =======================================
 
 # Numerical method parameters
@@ -146,7 +147,7 @@ tolk = 50 # number of iters
 tolu = 1e-4 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
 initialDeltaLambda = 1e-3 #
-arcLengthIncrem = vcat(ones(60) * 1e-4) #
+arcLengthIncrem = vcat(ones(40) * 1e-3) #
 nLoadSteps = length(arcLengthIncrem) # Number of load increments
 controlDofs = [6] #
 scalingProjection = 1 #
@@ -176,7 +177,8 @@ mVec = hcat([i[dofM] for i in matFint[elem]])
 
 # Computes curvatures
 # --------------------------------
-kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk)
+xrel = zeros(nelems)
+kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk, xrel)
 
 # Analytical solution M-κ
 # --------------------------------
@@ -194,5 +196,70 @@ for i in 1:nLoadSteps
         Mana[i] = σY0 * b * h^2 / 12 * (3 - κe^2 / κₖ^2 + κₖ / κe * C / E * (2 - 3 * κe / κₖ + κe^3 / κₖ^3))
     end
 end
+
+@test (maximum(abs.(abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end])) <= 1e-2
+
+
+# =======================================
+# AL test - cylindrical constraint
+# =======================================
+
+# Numerical method parameters
+# =======================================
+
+tolk = 50 # number of iters
+tolu = 1e-8 # Tolerance of converged disps
+tolf = 1e-6 # Tolerance of internal forces
+initialDeltaLambda = 1e-3 #
+arcLengthIncrem = vcat(ones(40) * 1e-3) #
+nLoadSteps = length(arcLengthIncrem) # Number of load increments
+controlDofs = [6] #
+
+# Numerical method settings struct
+StrAnalysisSettings = ArcLength_Cylindrical(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs)
+
+# ===============================================
+# Process model parameters
+# ===============================================
+
+sol, time, IterData = solver(StrSections, StrMaterialModels, StrMesh, StrBoundaryConds, StrAnalysisSettings, problemName, StrStressArray)
+
+# Auxiliar
+# --------------------------------
+P = abs(Fz)
+Iy = StrSections.Iy
+κe = 2 * σY0 / (E * h)
+
+# Numerical solution
+matFint = sol.matFint
+matUk = sol.matUk
+
+elem = 1
+dofM = 3
+mVec = hcat([i[dofM] for i in matFint[elem]])
+
+# Computes curvatures
+# --------------------------------
+xrel = zeros(nelems)
+kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk, xrel)
+
+# Analytical solution M-κ
+# --------------------------------
+
+Mana = zeros(nLoadSteps)
+C = E * K / (E + K)
+εY = σY0 / E
+ε⃰ = εY - σY0 / C
+κ⃰ = 2 * ε⃰ / h
+for i in 1:nLoadSteps
+    κₖ = abs(kappaHistElem[elem, i])
+    if κₖ <= κe
+        Mana[i] = E * StrSections.Iy * κₖ
+    else
+        Mana[i] = σY0 * b * h^2 / 12 * (3 - κe^2 / κₖ^2 + κₖ / κe * C / E * (2 - 3 * κe / κₖ + κe^3 / κₖ^3))
+    end
+end
+
+fig = plot(abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:circle, legend=:false)
 
 @test (maximum(abs.(abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end])) <= 1e-2

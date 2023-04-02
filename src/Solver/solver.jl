@@ -19,7 +19,8 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
     loadFactor = 0
     loadFactors = zeros(nTimes) # aux vector to compute AL load factors
     # Stress array
-    σArr = [[zeros(MaterialModel.ns) for _ in 1:nTimes] for _ in StressArraySets.elems]
+    # σArr = [[zeros(MaterialModel.ns) for _ in 1:nTimes] for _ in StressArraySets.elems]
+    σArr = [[[zeros(MaterialModel.ns) for _ in 1:MaterialModel.ne] for _ in 1:nTimes] for _ in StressArraySets.elems]
 
     while nTimes > time
         # Sets current disp Vector
@@ -44,7 +45,7 @@ function solver(Section, MaterialModel, Mesh, BoundaryConds, AnalysisSettings, p
             Fintₖ, σArr, matFint, KTₖ = assembler(Section, MaterialModel, Mesh, Uₖ, 1, σArr, time, StressArraySets, ModelSol.matFint)
 
             # Computes Uₖ & δUₖ
-            Uₖ, δUₖ, λₖ, currδu = step!(AnalysisSettings, Uₖ, ModelSol, KTₖ, Fintₖ, time, U, dispIter, varFext, currδu, convδu, c, λₖ)
+            Uₖ, δUₖ, λₖ, currδu = step!(AnalysisSettings, Uₖ, ModelSol, KTₖ, Fintₖ, time, U, dispIter, varFext, currδu, convδu, λₖ, c)
 
             # Computes Fintₖ at computed Uₖ
             Fintₖ, σArr, matFint = assembler(Section, MaterialModel, Mesh, Uₖ, 0, σArr, time, StressArraySets, ModelSol.matFint)

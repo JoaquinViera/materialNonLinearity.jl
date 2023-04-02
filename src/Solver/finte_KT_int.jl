@@ -30,11 +30,11 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time
     xgs, ws = gausslegendre(ElemMaterialModel.ns)
     # minXe = minimum(xge)
 
-    ind = round(ElemMaterialModel.ne * StressArraySets.xG_Rel_Ind)
+    # ind = round(ElemMaterialModel.ne * StressArraySets.xG_Rel_Ind)
+    # ind = StressArraySets.xG_points
+    # ind == 0 ? ind = 1 : nothing
 
-    ind == 0 ? ind = 1 : nothing
-
-    relXe = xge[ind]
+    # Xe = xge[ind]
 
     pgeVec = l / 2 * xge .+ l / 2
     pgsVec = h / 2 * xgs
@@ -77,13 +77,18 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time
                 secKTeb = h / 2 * (b * ∂σ∂ε * pgs^2 * ws[m]) + secKTeb
                 #secKTeab = h / 2 * (b * ∂σ∂ε * (-pgs) * ws[m]) + secKTeab
             else
-                # if minXe == xge[j] && elem == 1
-                #     σArr[time+1][m] = σ
-                # end
-                if relXe == xge[j]
-                    for k in 1:length(StressArraySets.elems)
-                        if elem == StressArraySets.elems[k]
-                            σArr[k][time+1][m] = σ
+                for t in 1:length(StressArraySets.xG_points)
+
+                    # if StressArraySets.xG_points[t] == xge[j]
+                    if StressArraySets.xG_points[t] == j
+                        for k in 1:length(StressArraySets.elems)
+                            if elem == StressArraySets.elems[k]
+                                # println("$k")
+                                # println("$t")
+                                # println("$m")
+                                # println("$σ")
+                                σArr[k][time+1][t][m] = σ
+                            end
                         end
                     end
                 end

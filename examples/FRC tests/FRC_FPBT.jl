@@ -120,11 +120,22 @@ StrMesh = Mesh(Nodes, Conec)
 supps = [1 Inf Inf 0; nnodes 0 Inf 0]
 
 # Define applied external loads
+load_coord1 = L / 4
+load_coord2 = 3L / 4
+
+delta_x = L / (nnodes - 1)
+n1 = convert(Int64, round(load_coord1 / delta_x))
+n2 = convert(Int64, round(load_coord2 / delta_x))
+
+x1 = xcoords[n1+1]
+x2 = xcoords[n2+1]
+
+midnode = convert(Int, (nnodes + 1) / 2)
+
 Fx = 0
 Fz = -1
 My = 0
-nod = convert(Int, (nnodes + 1) / 2)
-nodalForces = [nod Fx Fz My]
+nodalForces = [(n1+1) Fx Fz My; (n2+1) Fx Fz My]
 
 # BoundaryConds struct
 StrBoundaryConds = BoundaryConds(supps, nodalForces)
@@ -136,11 +147,13 @@ tolk = 75 # number of iters
 tolu = 1e-10 # Tolerance of converged disps
 tolf = 1e-6 # Tolerance of internal forces
 initialDeltaLambda = 1e-7 #
-# arcLengthIncrem = vcat(ones(30) * 1e-5, ones(100) * 3e-6)
-arcLengthIncrem = vcat(ones(115) * 1e-5)
-# arcLengthIncrem = vcat(ones(70) * 2e-6)
+arcLengthIncrem = vcat(ones(30) * 1e-5, ones(100) * 3e-6)
+arcLengthIncrem = vcat(ones(24) * 1e-5)
+arcLengthIncrem = vcat(ones(64) * 3e-6)
 nLoadSteps = length(arcLengthIncrem)
-controlDofs = [nod * 3 - 1] #
+# controlDofs = [(n1 + 1) * 3 - 1, (n2 + 1) * 3 - 1] #
+# controlDofs = [midnode * 3 - 1] #
+controlDofs = [(n1 - 2) * 3 - 1, (n2 + 2) * 3 - 1] #
 scalingProjection = -1 #
 
 # Numerical method settings struct
@@ -148,7 +161,7 @@ StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda
 
 # Stress Array
 # =======================================
-elems = [1, nnodes - 1]
+elems = [n1 + 1, midnode]
 xG_Rel_Ind = 0
 
 StrStressArray = StressArraySets(elems, xG_Rel_Ind)
@@ -174,32 +187,44 @@ matFint = sol.matFint
 matUk = sol.matUk
 
 # Clamped node
-# nod = 1
-elem = nod
+nod = n1 + 1
+nod2 = n2 + 1
+mid = midnode
+elem = n1 + 1
+elem2 = n2 + 1
+midElem = mid
 dofM = 3
 
 # Loaded node
 dofD = nod * 3 - 1
+dofD2 = nod2 * 3 - 1
+dofDmid = mid * 3 - 1
 dofT = nod * 3
+dofT2 = nod2 * 3
+dofTmid = mid * 3
 
 # Applied loads
 pVec = sol.loadFactors * P
 
 # Reaction Bending moment 
 mVec = hcat([i[dofM] for i in matFint[elem]])
+mVec2 = hcat([i[dofM] for i in matFint[elem2]])
+mVecmid = hcat([i[dofM] for i in matFint[midElem]])
 
 # Displacements at loaded node
 dVec = hcat([i[dofD] for i in matUk])
-tVec = hcat([i[dofT] for i in matUk])
+dVec2 = hcat([i[dofD2] for i in matUk])
+dVecmid = hcat([i[dofDmid] for i in matUk])
 
 # Compute curvatures
 # --------------------------------
 xrel = zeros(nelems)
+xrel[elem2-1] = 1
 kappaHistElem = frame_curvature(nelems, StrMesh, nLoadSteps, matUk, xrel)
 
 # Plot parameters
 # =======================================
-include("../src/Utils/plots.jl")
+include("../../src/Utils/plots.jl")
 lw = 3
 ms = 2
 color = "black"
@@ -208,7 +233,7 @@ legend_pos = :topright
 
 StrPlots = PlotSettings(lw, ms, color, minorGridBool, legend_pos)
 
-figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
+figspath = "..\\..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
 
 # Constitutive model plot
 
@@ -220,10 +245,20 @@ SEfig = ConstitutiveModelPlot(StrMaterialModels, [-epslim / 300, epslim], 1000, 
 # stop
 # M-κ plot  
 # --------------------------------
-elem = nod
+# elem = nod
 fig = plot(abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 xlabel!("κ")
 ylabel!("M")
+
+fig1 = plot(abs.(kappaHistElem[elem2-1, :]), abs.(mVec2), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+xlabel!("κ")
+ylabel!("M")
+
+fig1mid = plot(abs.(kappaHistElem[midElem, :]), abs.(mVecmid), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+xlabel!("κ")
+ylabel!("M")
+
+# plot(fig,fig1)
 
 # savefig(fig, "$(figspath)ejemplo6M-k.png")
 
@@ -233,14 +268,17 @@ fig2 = plot(abs.(dVec), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", l
 xlabel!("δ")
 ylabel!("P")
 
-# savefig(fig2, "$(figspath)ejemplo6P-d.png")
-
-##
-fig3 = plot(abs.(dVec), abs.(tVec), pVec, markershape=:circle, lw=lw, ms=ms, title="P-(δ,θ)", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+fig22 = plot(abs.(dVec2), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 xlabel!("δ")
-ylabel!("θ")
-zlabel!("P")
-##
+ylabel!("P")
+
+fig2mid = plot(abs.(dVecmid), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+xlabel!("δ")
+ylabel!("P")
+
+plot(fig2, fig22)
+
+# savefig(fig2, "$(figspath)ejemplo6P-d.png")
 
 # Stress plot  
 # --------------------------------
