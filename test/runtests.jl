@@ -8,3 +8,5 @@ include("isotropicBiLinear_EPP.jl")
 
 # User defined constitutive model
 include("userModel.jl")
+
+println("All tests passed!")

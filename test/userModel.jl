@@ -221,5 +221,7 @@ err = (abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end] * 100
 
 fig = plot(abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:circle, legend=:false)
 plot!(fig, abs.(kappaHistElem[elem, :]), Mana, markershape=:star, legend=:false, color=:red)
+
 @test (maximum(abs.(abs.(mVec[2:end]) - Mana[2:end]) ./ Mana[2:end])) <= 1e-2
 
+println("All tests passed for problem: $problemName !")

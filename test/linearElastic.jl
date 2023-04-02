@@ -291,3 +291,4 @@ Kaxial = E * A / l * [1 -1; -1 1]
 @test norm(KTeb - Kbending) <= 1e-6 * norm(Kbending)
 @test norm(KTea - Kaxial) <= 1e-6 * norm(Kaxial)
 
+println("All tests passed for problem: $problemName !")
