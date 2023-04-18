@@ -72,27 +72,28 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time
             secFintea = h / 2 * (b * Ba' * σ * ws[m]) .+ secFintea
             secFinteb = h / 2 * (b * (-Bb') * pgs * σ * ws[m]) .+ secFinteb
 
-            if intBool == 1
-                secKTea = h / 2 * (b * ∂σ∂ε * ws[m]) + secKTea
-                secKTeb = h / 2 * (b * ∂σ∂ε * pgs^2 * ws[m]) + secKTeb
-                #secKTeab = h / 2 * (b * ∂σ∂ε * (-pgs) * ws[m]) + secKTeab
-            else
-                for t in 1:length(StressArraySets.xG_points)
+            # if intBool == 1
+            secKTea = h / 2 * (b * ∂σ∂ε * ws[m]) + secKTea
+            secKTeb = h / 2 * (b * ∂σ∂ε * pgs^2 * ws[m]) + secKTeb
+            #secKTeab = h / 2 * (b * ∂σ∂ε * (-pgs) * ws[m]) + secKTeab
+            # else
+            for t in 1:length(StressArraySets.xG_points)
+                # println(StressArraySets.xG_points[t])
+                # if StressArraySets.xG_points[t] == xge[j]
+                if StressArraySets.xG_points[t] == j
 
-                    # if StressArraySets.xG_points[t] == xge[j]
-                    if StressArraySets.xG_points[t] == j
-                        for k in 1:length(StressArraySets.elems)
-                            if elem == StressArraySets.elems[k]
-                                # println("$k")
-                                # println("$t")
-                                # println("$m")
-                                # println("$σ")
-                                σArr[k][time+1][t][m] = σ
-                            end
+                    for k in 1:length(StressArraySets.elems)
+                        if elem == StressArraySets.elems[k]
+                            # println("$k")
+                            # println("$t")
+                            # println("$m")
+                            # println("$σ")
+                            σArr[k][time+1][t][m] = σ
                         end
                     end
                 end
             end
+            # end
 
         end # endfor ws
 

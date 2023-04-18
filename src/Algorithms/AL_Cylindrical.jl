@@ -21,7 +21,7 @@ function step!(alg::ArcLength_Cylindrical, Uₖ, ModelSol, KTₖ, Fintk, time, U
     varFext = view(varFext, freeDofs)
     KTₖ_red = view(KTₖ, freeDofs, freeDofs)
 
-    r = [Fext_red - Fint_red varFext]
+    r = [(Fext_red - Fint_red) varFext]
 
     deltas = KTₖ_red \ r
 
@@ -29,8 +29,10 @@ function step!(alg::ArcLength_Cylindrical, Uₖ, ModelSol, KTₖ, Fintk, time, U
     δū = view(deltas, :, 2)
 
     arcLengthNorm = zeros(length(Uₖ))
+    # arcLengthNorm .= 1
     # arcLengthNorm[1:3:end] .= 1 # θy dofs
     arcLengthNorm[2:3:end] .= 1 # uz dofs
+    # arcLengthNorm[6] = 1
     arcLengthNorm = view(arcLengthNorm, freeDofs)
 
     if length(alg.arcLengthIncrem) > 1
@@ -44,8 +46,9 @@ function step!(alg::ArcLength_Cylindrical, Uₖ, ModelSol, KTₖ, Fintk, time, U
             δλ = alg.initialDeltaLambda
         else
             # println(" $time")
-            δλ = sign((convδu' * (arcLengthNorm .* δū))) * Δl / sqrt(δū' * (arcLengthNorm .* δū))
-            # println(sign((convδu' * (arcLengthNorm .* δū))))
+            # δλ = sign((convδu' * (arcLengthNorm .* δū))) * Δl / sqrt(δū' * (arcLengthNorm .* δū))
+            δλ = Δl / sqrt(δū' * (arcLengthNorm .* δū))
+            # δλ = sign(convδu' * δū) * Δl / sqrt(δū' * δū)
         end
     else # Cylindrical constraint method - De Souza Neto
         # println(dispIter)
@@ -54,12 +57,23 @@ function step!(alg::ArcLength_Cylindrical, Uₖ, ModelSol, KTₖ, Fintk, time, U
         c = (currδu + δu⃰)' * (arcLengthNorm .* (currδu + δu⃰)) - Δl^2
         d = b^2 - 4 * a * c
         d < 0 ? error("Negative discriminant at time $time, reduce arc length increment.") : nothing
-        λsol = -b / (2a) .+ sqrt(d) / (2a) * [-1; 1]
-
+        λsol = -b / (2 * a) .+ sqrt(d) / (2 * a) * [-1; 1]
         verif = [(currδu + δu⃰ + λsol[1] * δū)' * (arcLengthNorm .* currδu)
             (currδu + δu⃰ + λsol[2] * δū)' * (arcLengthNorm .* currδu)]
 
+        # aa = δū' * δū # eq 4.117
+        # bb = 2 * (currδu + δu⃰)' * δū
+        # cc = (currδu + δu⃰)' * (currδu + δu⃰) - Δl^2
+        # dd = bb^2 - 4 * aa * cc
+
+        # λsol = -bb / (2 * aa) .+ sqrt(dd) / (2 * aa) * [-1; 1]
+
+        # val1 = (currδu + δu⃰ + λsol[1] * δū)' * currδu
+        # val2 = (currδu + δu⃰ + λsol[2] * δū)' * currδu
+        # verif = [val1; val2]
+
         δλ = λsol[findall(x -> x == maximum(verif), verif)[1]]
+
     end
 
     δUₖ = δu⃰ + δλ * δū

@@ -32,8 +32,8 @@ epslim = 1.00e-1
 E = 6.44 * 1000 / 1.74e-4 # kN/m2
 
 # Gauss points
-ne = 10
-ns = 20
+ne = 20
+ns = 50
 
 import materialNonLinearity: constitutive_model
 
@@ -111,8 +111,10 @@ load_coord2 = 3L / 4
 
 # nnodes = 21
 # xcoords = collect(LinRange(0, L, nnodes))
-xcoords1 = collect(LinRange(0, load_coord1, 6))
-xcoords2 = collect(LinRange(load_coord2, L, 6))
+# xcoords1 = collect(LinRange(0, load_coord1, 6))
+xcoords1 = collect(LinRange(0, load_coord1, 2))
+# xcoords2 = collect(LinRange(load_coord2, L, 6))
+xcoords2 = collect(LinRange(load_coord2, L, 2))
 xcoords = vcat(xcoords1, xcoords2)
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
@@ -144,7 +146,8 @@ supps = [1 Inf Inf 0; nnodes 0 Inf 0]
 # load_coord2 = 3L / 4
 
 # delta_x = L / (nnodes - 1)
-n1 = 5
+# n1 = 5
+n1 = 1
 # n1 = convert(Int64, round(load_coord1 / delta_x))
 # n2 = convert(Int64, round(load_coord2 / delta_x))
 n2 = n1 + 1
@@ -165,35 +168,36 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 # =======================================
 
 tolk = 75 # number of iters
-tolu = 1e-10 # Tolerance of converged disps
-tolf = 1e-6 # Tolerance of internal forces
-initialDeltaLambda = 1e-5 #
+tolu = 1e-8 # Tolerance of converged disps
+tolf = 1e-5 # Tolerance of internal forces
+initialDeltaLambda = 1e-6 #
 
 ## Dominant dof 
-# arcLengthIncrem = vcat(ones(23) * 1e-5, ones(5) * 2e-5) # dips
+arcLengthIncrem = vcat(ones(8) * 1e-5, ones(7) * 9e-6, ones(15) * 7e-6, ones(2) * 2e-5, ones(14) * 7e-6, ones(2) * 2e-5, ones(41) * 7e-6, ones(2) * 2e-5, ones(15) * 7e-6, ones(2) * 2e-5, ones(61) * 7e-6, ones(25) * 2e-5, ones(300) * 7e-5, ones(50) * 5e-5) # dips
+# arcLengthIncrem = vcat(ones(12) * 1e-5) # dips
 # arcLengthIncrem = vcat(ones(23) * 1e-5, ones(9) * 2e-5) # dips
 # arcLengthIncrem = vcat(ones(23) * 1e-5, ones(8) * 2e-5, ones(5) * 5e-5) # dips
 # arcLengthIncrem = vcat(ones(23) * 1e-5, ones(8) * 2e-5, ones(4) * 5e-5, ones(3) * 2e-5, ones(2) * 9e-5) # dips
 # arcLengthIncrem = vcat(ones(23) * 1e-5, ones(8) * 2e-5, ones(4) * 5e-5, ones(3) * 2e-5, ones(1) * 9e-5, ones(1) * 1e-5) # dips
 # arcLengthIncrem = vcat(ones(5) * 5e-5, ones(5) * 9e-5) # dips
 # arcLengthIncrem = vcat(ones(5) * 5e-5, ones(4) * 9e-5, ones(2) * 6e-4) # dips
-# # arcLengthIncrem = vcat(ones(2) * 1e-5) # dips
-# println(length(arcLengthIncrem))
-# nLoadSteps = length(arcLengthIncrem)
-# dof1 = (n1 + 1) * 3 - 1 # Uz
-# dof2 = (n2 + 1) * 3 - 1 # Uz
-# controlDofs = [dof1, dof2] #
-# scalingProjection = -1 #
-
-# Numerical method settings struct
-# StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
-
-arcLengthIncrem = vcat(ones(200) * 1e-6)
+# arcLengthIncrem = vcat(ones(2) * 1e-5) # dips
+println(length(arcLengthIncrem))
+nLoadSteps = length(arcLengthIncrem)
 dof1 = (n1 + 1) * 3 - 1 # Uz
 dof2 = (n2 + 1) * 3 - 1 # Uz
 controlDofs = [dof1, dof2] #
-nLoadSteps = length(arcLengthIncrem)
-StrAnalysisSettings = ArcLength_Cylindrical(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs)
+scalingProjection = -1 #
+
+# Numerical method settings struct
+StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
+
+# arcLengthIncrem = vcat(ones(2) * 1e-4, ones(14) * 2e-5)
+# dof1 = (n1 + 1) * 3 - 1 # Uz
+# dof2 = (n2 + 1) * 3 - 1 # Uz
+# controlDofs = [dof1, dof2] #
+# nLoadSteps = length(arcLengthIncrem)
+# StrAnalysisSettings = ArcLength_Cylindrical(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs)
 
 # Stress Array
 # =======================================
@@ -541,125 +545,130 @@ fig
 # # savefig(fig2, "$(figspath)ejemplo8Pd.png")
 
 
-# kappaVec_paper =
-#     [
-#         0.000
-#         0.003
-#         0.004
-#         0.004
-#         0.008
-#         0.013
-#         0.023
-#         0.029
-#         0.041
-#         0.052
-#         0.054
-#         0.061
-#         0.066
-#         0.081
-#         0.092
-#         0.108
-#         0.123
-#         0.135
-#         0.149
-#         0.162
-#         0.171
-#         0.194
-#         0.204
-#         0.222
-#         0.229
-#         0.238
-#         0.259
-#         0.278
-#         0.295
-#         0.324
-#         0.353
-#         0.376
-#         0.416
-#         0.439
-#         0.446
-#         0.470
-#         0.491
-#         0.525
-#         0.552
-#         0.572
-#         0.594
-#         0.630
-#         0.657
-#         0.680
-#         0.704
-#         0.732
-#         0.763
-#         0.794
-#         0.828
-#         0.849
-#         0.886
-#         0.925
-#         0.961
-#         0.981
-#         0.997]
+kappaVec_paper =
+    [
+        0.000
+        0.003
+        0.004
+        0.004
+        0.008
+        0.013
+        0.023
+        0.029
+        0.041
+        0.052
+        0.054
+        0.061
+        0.066
+        0.081
+        0.092
+        0.108
+        0.123
+        0.135
+        0.149
+        0.162
+        0.171
+        0.194
+        0.204
+        0.222
+        0.229
+        0.238
+        0.259
+        0.278
+        0.295
+        0.324
+        0.353
+        0.376
+        0.416
+        0.439
+        0.446
+        0.470
+        0.491
+        0.525
+        0.552
+        0.572
+        0.594
+        0.630
+        0.657
+        0.680
+        0.704
+        0.732
+        0.763
+        0.794
+        0.828
+        0.849
+        0.886
+        0.925
+        0.961
+        0.981
+        0.997]
 
-# mVec_paper =
-#     [
-#         0.005
-#         0.503
-#         0.779
-#         1.010
-#         1.078
-#         1.069
-#         1.141
-#         1.218
-#         1.286
-#         1.268
-#         1.223
-#         1.273
-#         1.318
-#         1.350
-#         1.422
-#         1.458
-#         1.499
-#         1.481
-#         1.449
-#         1.395
-#         1.345
-#         1.313
-#         1.286
-#         1.245
-#         1.191
-#         1.146
-#         1.123
-#         1.078
-#         1.064
-#         1.005
-#         0.956
-#         0.915
-#         0.851
-#         0.815
-#         0.788
-#         0.752
-#         0.729
-#         0.679
-#         0.661
-#         0.652
-#         0.616
-#         0.571
-#         0.548
-#         0.534
-#         0.530
-#         0.503
-#         0.480
-#         0.453
-#         0.430
-#         0.426
-#         0.403
-#         0.389
-#         0.385
-#         0.371
-#         0.376
-#     ]
+mVec_paper =
+    [
+        0.005
+        0.503
+        0.779
+        1.010
+        1.078
+        1.069
+        1.141
+        1.218
+        1.286
+        1.268
+        1.223
+        1.273
+        1.318
+        1.350
+        1.422
+        1.458
+        1.499
+        1.481
+        1.449
+        1.395
+        1.345
+        1.313
+        1.286
+        1.245
+        1.191
+        1.146
+        1.123
+        1.078
+        1.064
+        1.005
+        0.956
+        0.915
+        0.851
+        0.815
+        0.788
+        0.752
+        0.729
+        0.679
+        0.661
+        0.652
+        0.616
+        0.571
+        0.548
+        0.534
+        0.530
+        0.503
+        0.480
+        0.453
+        0.430
+        0.426
+        0.403
+        0.389
+        0.385
+        0.371
+        0.376
+    ]
 
-# plot!(fig, kappaVec_paper[1:10], mVec_paper[1:10], label="Kusel-Kearlsey")
+# elem = n1 + 1
+fig = plot(abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:circle, lw=lw, ms=ms, title="M-κ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
+xlabel!("κ")
+ylabel!("M")
+# figg = plot(abs.(kappaHistElem[elem, :]))
+plot!(fig, kappaVec_paper[1:end], mVec_paper[1:end], color=:green, markershape=:star, lw=lw, ms=ms, label="Kusel-Kearlsey")
 
 # # savefig(fig, "$(figspath)ejemplo8Mk.png")
 
-# fig
+fig

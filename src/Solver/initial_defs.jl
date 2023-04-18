@@ -4,10 +4,10 @@
 
 function initial_defs(Mesh, BoundaryConds, AnalysisSettings, name)
 
-    # println(" \n==================================================")
-    # println("Starting analysis.")
-    # println("Running problem $name")
-    # println("================================================== \n")
+    println(" \n==================================================")
+    println("Starting analysis.")
+    println("Running problem $name")
+    println("================================================== \n")
 
     ndofs = 3 # degrees of freedom per node
     nnodes = size(Mesh.nodesMat, 1)
@@ -70,6 +70,7 @@ function initial_defs(Mesh, BoundaryConds, AnalysisSettings, name)
     # store struct
     ModelStore = ModelSol(Uₖ, δUₖ, Fextk, Fintk, matUₖ, matFext, matFint, free_dofs, loadFactors)
     IterData = IterParams(nTimes, stopCrit)
+    IterData.stopCrit[1] = 3
 
     return ModelStore, IterData, varFext, λₖ, U, c
 end
