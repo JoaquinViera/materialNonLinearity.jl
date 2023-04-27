@@ -34,7 +34,6 @@ function frame_curvature(nelems, Mesh, len, matUk, xrel)
     rotXYXZ[2, 2] = -1
     rotXYXZ[4, 4] = -1
     dofsbe = [2, 3, 5, 6]
-
     for j in 1:nelems
         nodeselem = Mesh.conecMat[j, ndofs]
         elemdofs = nodes2dofs(nodeselem[:], ndofs)

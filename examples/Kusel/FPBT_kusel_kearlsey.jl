@@ -174,14 +174,6 @@ initialDeltaLambda = 1e-6 #
 
 ## Dominant dof 
 arcLengthIncrem = vcat(ones(8) * 1e-5, ones(7) * 9e-6, ones(15) * 7e-6, ones(2) * 2e-5, ones(14) * 7e-6, ones(2) * 2e-5, ones(41) * 7e-6, ones(2) * 2e-5, ones(15) * 7e-6, ones(2) * 2e-5, ones(61) * 7e-6, ones(25) * 2e-5, ones(300) * 7e-5, ones(50) * 5e-5) # dips
-# arcLengthIncrem = vcat(ones(12) * 1e-5) # dips
-# arcLengthIncrem = vcat(ones(23) * 1e-5, ones(9) * 2e-5) # dips
-# arcLengthIncrem = vcat(ones(23) * 1e-5, ones(8) * 2e-5, ones(5) * 5e-5) # dips
-# arcLengthIncrem = vcat(ones(23) * 1e-5, ones(8) * 2e-5, ones(4) * 5e-5, ones(3) * 2e-5, ones(2) * 9e-5) # dips
-# arcLengthIncrem = vcat(ones(23) * 1e-5, ones(8) * 2e-5, ones(4) * 5e-5, ones(3) * 2e-5, ones(1) * 9e-5, ones(1) * 1e-5) # dips
-# arcLengthIncrem = vcat(ones(5) * 5e-5, ones(5) * 9e-5) # dips
-# arcLengthIncrem = vcat(ones(5) * 5e-5, ones(4) * 9e-5, ones(2) * 6e-4) # dips
-# arcLengthIncrem = vcat(ones(2) * 1e-5) # dips
 println(length(arcLengthIncrem))
 nLoadSteps = length(arcLengthIncrem)
 dof1 = (n1 + 1) * 3 - 1 # Uz
@@ -191,13 +183,6 @@ scalingProjection = -1 #
 
 # Numerical method settings struct
 StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs, scalingProjection)
-
-# arcLengthIncrem = vcat(ones(2) * 1e-4, ones(14) * 2e-5)
-# dof1 = (n1 + 1) * 3 - 1 # Uz
-# dof2 = (n2 + 1) * 3 - 1 # Uz
-# controlDofs = [dof1, dof2] #
-# nLoadSteps = length(arcLengthIncrem)
-# StrAnalysisSettings = ArcLength_Cylindrical(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda, arcLengthIncrem, controlDofs)
 
 # Stress Array
 # =======================================
@@ -262,7 +247,7 @@ legend_pos = :topright
 
 StrPlots = PlotSettings(lw, ms, color, minorGridBool, legend_pos)
 
-# figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
+figspath = "..\\paper_matnonliniden\\tex\\2_Informe\\figs\\"
 
 # Constitutive model plot
 
@@ -279,7 +264,7 @@ fig = plot(abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:circle, lw=lw,
 xlabel!("κ")
 ylabel!("M")
 
-# savefig(fig, "$(figspath)ejemplo6M-k.png")
+# savefig(fig, "$(figspath)ejemplo8M-k.png")
 
 # P-δ plot  
 # --------------------------------
@@ -314,21 +299,27 @@ p, w = gausslegendre(ns)
 ## =====================================================
 tf = length(arcLengthIncrem)
 
-sfig = plot(σArr[1][tf][1], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1, legend=:topright)
-plot!(sfig, σArr[1][tf][10], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
-plot!(sfig, σArr[1][tf][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
+sfig = plot(σArr[2][tf][1], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1, legend=:topright)
+# plot!(sfig, σArr[1][tf][10], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
+# plot!(sfig, σArr[1][tf][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
 plot!(sfig, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="", color=:"black")
 
-sfig1 = plot(σArr[1][tf-1][1], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[tf-1]), minorgrid=1, draw_arrow=1, legend=:topright)
-plot!(sfig1, σArr[1][tf-1][10], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[tf-1]), minorgrid=1, draw_arrow=1)
-plot!(sfig1, σArr[1][tf-1][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[tf-1]), minorgrid=1, draw_arrow=1)
+sfig1 = plot(σArr[2][54][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[54]), minorgrid=1, draw_arrow=1, legend=:bottomleft)
+plot!(sfig1, σArr[2][108][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[108]), minorgrid=1, draw_arrow=1)
+plot!(sfig1, σArr[2][217][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[217]), minorgrid=1, draw_arrow=1)
+plot!(sfig1, σArr[2][326][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[326]), minorgrid=1, draw_arrow=1)
+plot!(sfig1, σArr[2][435][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[435]), minorgrid=1, draw_arrow=1)
+plot!(sfig1, σArr[2][tf][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[tf]), minorgrid=1, draw_arrow=1)
 plot!(sfig1, zeros(length(p)), p * h / 2, lw=lw, ms=ms, label="", color=:"black")
+
+savefig(sfig1, "$(figspath)ejemplo8stress2.png")
+
 
 plot(sfig, sfig1)
 
 sfig2 = plot(σArr[2][tf][1], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[tf]), minorgrid=1, draw_arrow=1, legend=:topright)
-plot!(sfig2, σArr[2][tf][10], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[tf]), minorgrid=1, draw_arrow=1)
-plot!(sfig2, σArr[2][tf][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[tf]), minorgrid=1, draw_arrow=1)
+plot!(sfig2, σArr[2][tf][1], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[tf]), minorgrid=1, draw_arrow=1)
+plot!(sfig2, σArr[2][tf][1], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[tf]), minorgrid=1, draw_arrow=1)
 # plot!(sfig2, σArr[3][end][1], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
 # plot!(sfig2, σArr[3][end][10], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
 # plot!(sfig2, σArr[3][end][end], p * h / 2, markershape=:circle, lw=lw, ms=ms, title="stress", label=@sprintf("M = %0.2f", mVec[end]), minorgrid=1, draw_arrow=1)
@@ -397,25 +388,24 @@ plot(sfigElem2, sfigElem3)
 # # Bending moment plot
 # # --------------------------------
 ndivs = 2
-timesPlot = vcat(collect(1:2:nLoadSteps), nLoadSteps)
+timesPlot = vcat(collect(1:50:nLoadSteps))
 
 figsM = BendingMomentPlot(timesPlot, StrMesh, StrPlots, matFint)
 
-# savefig(figsM[end], "$(figspath)ejemplo8bending.png")
+savefig(figsM[end], "$(figspath)ejemplo8bending.png")
 
 
 # Deformed shape plot
 # --------------------------------
 ndivs = 2
-timesPlot = [1, length(pVec)]
+timesPlot = vcat(collect(1:50:nLoadSteps))
 
 figsD = DeformedShapePlot(timesPlot, StrMesh, StrPlots, matUk)
 
 figsDefs = plot(figsD[end], figsD[end-1], title="Deformed shapes")
 
-# savefig(figsDefs, "$(figspath)ejemplo8deformed.png")
+savefig(figsDefs, "$(figspath)ejemplo8deformed.png")
 
-fig
 
 # Paper results
 
@@ -669,6 +659,6 @@ ylabel!("M")
 # figg = plot(abs.(kappaHistElem[elem, :]))
 plot!(fig, kappaVec_paper[1:end], mVec_paper[1:end], color=:green, markershape=:star, lw=lw, ms=ms, label="Kusel-Kearlsey")
 
-# # savefig(fig, "$(figspath)ejemplo8Mk.png")
+savefig(fig, "$(figspath)ejemplo8Mk.png")
 
 fig

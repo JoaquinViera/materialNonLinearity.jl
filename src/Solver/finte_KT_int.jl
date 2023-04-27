@@ -12,7 +12,6 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time
     KTea = zeros(2, 2)
     Fintea = zeros(2)
 
-
     # Bending
     KTeb = zeros(4, 4)
     Finteb = zeros(4)
@@ -25,16 +24,8 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time
     h = secParams[2]
 
     # Gauss points
-
     xge, we = gausslegendre(ElemMaterialModel.ne)
     xgs, ws = gausslegendre(ElemMaterialModel.ns)
-    # minXe = minimum(xge)
-
-    # ind = round(ElemMaterialModel.ne * StressArraySets.xG_Rel_Ind)
-    # ind = StressArraySets.xG_points
-    # ind == 0 ? ind = 1 : nothing
-
-    # Xe = xge[ind]
 
     pgeVec = l / 2 * xge .+ l / 2
     pgsVec = h / 2 * xgs
@@ -50,7 +41,6 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time
 
         secFinteb = 0
         secKTeb = 0
-
         #secKTeab = 0
 
         pge = view(pgeVec, j)[1]
@@ -78,16 +68,9 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time
             #secKTeab = h / 2 * (b * ∂σ∂ε * (-pgs) * ws[m]) + secKTeab
             # else
             for t in 1:length(StressArraySets.xG_points)
-                # println(StressArraySets.xG_points[t])
-                # if StressArraySets.xG_points[t] == xge[j]
                 if StressArraySets.xG_points[t] == j
-
                     for k in 1:length(StressArraySets.elems)
                         if elem == StressArraySets.elems[k]
-                            # println("$k")
-                            # println("$t")
-                            # println("$m")
-                            # println("$σ")
                             σArr[k][time+1][t][m] = σ
                         end
                     end
@@ -99,10 +82,8 @@ function finte_KT_int(ElemMaterialModel, l, secParams, Uke, intBool, σArr, time
 
         # Tangent stiffness matrix
         if intBool == 1
-
             KTea = l / 2 * (Ba' * secKTea * Ba * we[j]) + KTea
             KTeb = l / 2 * (Bb' * secKTeb * Bb * we[j]) + KTeb
-
             #KTeab = l / 2 * (Ba' * secKTeab * Bb * we[j]) + KTeab
         end
 

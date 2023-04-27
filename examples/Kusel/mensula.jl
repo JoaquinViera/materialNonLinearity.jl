@@ -58,14 +58,14 @@ function constitutive_model(ElemMaterialModel::UserModel, εₖ)
     # Tension - paper
     # ---------------
     # Tramo 1
-    fctd = 6.44 * 1000 * f # kN/m2
-    # fctd = 2.8 * 1000  # kN/m2
-    epsf = 1.74e-4
-    # epsf = fctd / E
+    # fctd = 6.44 * 1000 * f # kN/m2
+    fctd = 2.8 * 1000  # kN/m2
+    # epsf = 1.74e-4
+    epsf = fctd / E
     # Tramo 2
     ft1 = 2.8 * 1000 # kN/m2
-    eps1 = 1.74e-4 * 1.05
-    # eps1 = epsf
+    # eps1 = 1.74e-4 * 1.05
+    eps1 = epsf
     # Tramo 3
     ft2 = 3.4 * 1000 # kN/m2
     eps2 = 9.00e-3
@@ -119,8 +119,8 @@ StrSections = Rectangle(; b, h)
 
 # Nodes
 L = 1
-# nnodes = 21
-nnodes = 3
+nnodes = 21
+# nnodes = 3
 xcoords = collect(LinRange(0, L, nnodes))
 ycoords = zeros(length(xcoords))
 Nodes = hcat(xcoords, ycoords)
@@ -165,8 +165,9 @@ initialDeltaLambda = 1e-7 #
 
 arcLengthIncrem = vcat(ones(30) * 3e-5, ones(28) * 7e-6, ones(25) * 3e-6)
 arcLengthIncrem = vcat(ones(5) * 1e-4, ones(4) * 3e-5, ones(15) * 2e-5)
-arcLengthIncrem = vcat(ones(17) * 7e-5, ones(43) * 1e-5, ones(2) * 7e-6)
-arcLengthIncrem = vcat(ones(17) * 7e-5, ones(20) * 5e-4, ones(400) * 1e-3)
+arcLengthIncrem = vcat(ones(17) * 7e-5, ones(43) * 1e-5, ones(1) * 7e-6)
+# arcLengthIncrem = vcat(ones(17) * 7e-5, ones(20) * 5e-4)
+# arcLengthIncrem = vcat(ones(17) * 7e-5, ones(20) * 5e-4, ones(400) * 1e-3)
 nLoadSteps = length(arcLengthIncrem)
 controlDofs = [6] #
 # controlDofs = [nnodes * 3 - 1] #
@@ -177,7 +178,8 @@ StrAnalysisSettings = ArcLength(tolk, tolu, tolf, nLoadSteps, initialDeltaLambda
 
 # Stress Array
 # =======================================
-elems = [1]
+nelems = size(Conec, 1)
+elems = collect(1:nelems)
 xG_Rel_Ind = collect(1:ne)
 
 StrStressArray = StressArraySets(elems, xG_Rel_Ind)
