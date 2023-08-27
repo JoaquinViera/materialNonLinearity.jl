@@ -3,7 +3,7 @@
 # ===============================================
 
 # Load solver module
-using materialNonLinearity, LinearAlgebra
+using materialNonLinearity, LinearAlgebra, Plots
 
 # example name
 problemName = "isotropicBiLinear_LH"
@@ -15,6 +15,10 @@ E = 210e6
 K = E / 100
 ne = 12
 ns = 12
+
+# plot parameters
+lw = 1
+ms = 1
 
 # Materials struct
 StrMaterialModels = IsotropicBiLinear(E, σY0, K, ne, ns)
@@ -70,7 +74,7 @@ StrBoundaryConds = BoundaryConds(supps, nodalForces)
 # Stress Array
 # =======================================
 elems = []
-xG_Rel_Ind = 0
+xG_Rel_Ind = [0]
 
 StrStressArray = StressArraySets(elems, xG_Rel_Ind)
 
