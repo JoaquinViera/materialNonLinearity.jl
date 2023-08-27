@@ -145,10 +145,11 @@ fig = plot(abs.(kappaHistElem[elem, :]), Mana, markershape=:circle, lw=lw, ms=ms
 plot!(fig, abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:rect, lw=lw, ms=ms, label="FEM")
 xlabel!("κ")
 ylabel!("M")
-
+savefig("M-k-plot.png") 
 
 # P-δ plot  
 # --------------------------------
 fig2 = plot(abs.(dVec), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 xlabel!("δ")
 ylabel!("P")
+savefig("P-d-plot.png");
