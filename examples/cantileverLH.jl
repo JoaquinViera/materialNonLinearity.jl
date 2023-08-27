@@ -17,8 +17,8 @@ ne = 12
 ns = 12
 
 # plot parameters
-lw = 1
-ms = 1
+lw = 2
+ms = 4.5
 
 # Materials struct
 StrMaterialModels = IsotropicBiLinear(E, σY0, K, ne, ns)
@@ -141,14 +141,15 @@ end
 
 # M-κ plot
 # --------------------------------
-fig = plot(abs.(kappaHistElem[elem, :]), Mana, markershape=:circle, lw=lw, ms=ms, title="M-κ", label="Analytic", minorgrid=1, draw_arrow=1, legend=:bottomright)
-plot!(fig, abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:rect, lw=lw, ms=ms, label="FEM")
-xlabel!("κ")
-ylabel!("M")
-
+fig = plot(abs.(kappaHistElem[elem, :]), Mana, markershape=:circle, markeralpha=:0.4, lw=lw, ms=ms, label="Analytic", minorgrid=1, draw_arrow=1, legend=:bottomright)
+plot!(fig, abs.(kappaHistElem[elem, :]), abs.(mVec), markershape=:x, markeralpha=:0.6,  lw=lw, ms=1.25*ms, label="Numeric")
+xlabel!("Curvature (1/m)")
+ylabel!("Moment (kN.m)")
+savefig("M-k-plot.png") 
 
 # P-δ plot  
 # --------------------------------
 fig2 = plot(abs.(dVec), pVec, markershape=:circle, lw=lw, ms=ms, title="P-δ", label="FEM", minorgrid=1, draw_arrow=1, legend=:bottomright)
 xlabel!("δ")
 ylabel!("P")
+savefig("P-d-plot.png");
